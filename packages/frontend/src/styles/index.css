@@ -1,0 +1,1535 @@
+/**
+ * Global Styles
+ *
+ * Base styles for the Splendubious Discord Activity.
+ */
+
+/* =============================================================================
+   CSS VARIABLES
+   ============================================================================= */
+
+:root {
+  /* Gem colors */
+  --gem-emerald: #2ecc71;
+  --gem-diamond: #ecf0f1;
+  --gem-sapphire: #3498db;
+  --gem-onyx: #2c3e50;
+  --gem-ruby: #e74c3c;
+  --gem-gold: #f39c12;
+
+  /* UI colors */
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-card: #0f3460;
+  --text-primary: #eaeaea;
+  --text-secondary: #a0a0a0;
+  --accent: #e94560;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --error: #e74c3c;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-round: 50%;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+/* =============================================================================
+   RESET & BASE
+   ============================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* =============================================================================
+   LAYOUT
+   ============================================================================= */
+
+.loading-screen,
+.menu-screen,
+.lobby-screen {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+}
+
+.game-screen {
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "status status"
+    "opponents game"
+    "bottom bottom";
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  overflow: hidden;
+}
+
+/* Player count classes no longer change layout */
+.game-screen.players-2,
+.game-screen.players-3,
+.game-screen.players-4 {
+  /* Same layout for all player counts */
+}
+
+.landing-page {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+}
+
+/* =============================================================================
+   LOADING SCREEN
+   ============================================================================= */
+
+.loading-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.game-title {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-lg);
+  background: linear-gradient(90deg, var(--gem-ruby), var(--gem-gold), var(--gem-emerald));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.spinner {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.spinner-gem {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.spinner-gem:nth-child(1) { animation-delay: -0.4s; }
+.spinner-gem:nth-child(2) { animation-delay: -0.3s; }
+.spinner-gem:nth-child(3) { animation-delay: -0.2s; }
+.spinner-gem:nth-child(4) { animation-delay: -0.1s; }
+.spinner-gem:nth-child(5) { animation-delay: 0s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.loading-message {
+  color: var(--text-secondary);
+}
+
+.loading-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.error-icon {
+  font-size: 3rem;
+}
+
+.error-message {
+  color: var(--error);
+}
+
+/* =============================================================================
+   MENU SCREEN
+   ============================================================================= */
+
+.menu-content {
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.menu-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.game-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-top: var(--spacing-sm);
+}
+
+.user-info {
+  background: var(--bg-card);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  display: inline-flex;
+  gap: var(--spacing-sm);
+}
+
+.user-label {
+  color: var(--text-secondary);
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-name-editable {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.user-info .name-edit-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.user-info .name-input {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  width: 120px;
+}
+
+.user-info .edit-name-btn {
+  opacity: 0.6;
+}
+
+.user-info .edit-name-btn:hover {
+  opacity: 1;
+}
+
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.menu-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+.menu-divider::before,
+.menu-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--bg-card);
+}
+
+.join-room-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.error-text {
+  color: var(--error);
+  font-size: 0.9rem;
+}
+
+.menu-error {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: rgba(231, 76, 60, 0.2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--error);
+}
+
+/* =============================================================================
+   LOBBY SCREEN
+   ============================================================================= */
+
+.lobby-content {
+  max-width: 500px;
+  width: 100%;
+}
+
+.lobby-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.lobby-header h2 {
+  margin-bottom: var(--spacing-md);
+}
+
+.room-code-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+}
+
+.room-code-label {
+  color: var(--text-secondary);
+}
+
+.room-code {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+
+.players-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.players-section h3 {
+  margin-bottom: var(--spacing-sm);
+}
+
+.players-list {
+  list-style: none;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--bg-primary);
+}
+
+.player-item:last-child {
+  border-bottom: none;
+}
+
+.player-item.local {
+  background: rgba(233, 69, 96, 0.1);
+}
+
+.player-item.spectator {
+  opacity: 0.6;
+}
+
+.host-badge,
+.you-badge {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  margin-left: var(--spacing-sm);
+}
+
+.host-badge {
+  background: var(--gem-gold);
+  color: #333;
+}
+
+.you-badge {
+  background: var(--accent);
+  color: white;
+}
+
+.edit-name-btn {
+  margin-left: var(--spacing-xs);
+  opacity: 0.6;
+}
+
+.edit-name-btn:hover {
+  opacity: 1;
+}
+
+.name-edit-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.name-input {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  width: 120px;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.player-status {
+  font-size: 0.8rem;
+}
+
+.status-connected { color: var(--success); }
+.status-disconnected { color: var(--error); }
+.status-reconnecting { color: var(--warning); }
+
+.settings-section,
+.waiting-section {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.settings-section h3 {
+  margin-bottom: var(--spacing-md);
+}
+
+.player-count-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.count-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.waiting-section {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.lobby-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.waiting-message {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: var(--spacing-md);
+}
+
+/* =============================================================================
+   GAME SCREEN LAYOUT
+   ============================================================================= */
+
+.game-status-banner {
+  grid-area: status;
+  background: var(--bg-secondary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+.game-ended,
+.final-round,
+.current-turn-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.game-ended {
+  color: var(--gem-gold);
+  font-weight: bold;
+}
+
+.final-round {
+  color: var(--warning);
+  font-weight: bold;
+}
+
+.round-indicator {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-left: var(--spacing-md);
+}
+
+.opponents-sidebar {
+  grid-area: opponents;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  overflow-y: auto;
+  max-height: 100%;
+  padding-right: var(--spacing-sm);
+}
+
+.player-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.player-area.bottom { grid-area: bottom; }
+
+.game-area {
+  grid-area: game;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+
+.action-panel-container {
+  position: fixed;
+  bottom: var(--spacing-md);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+/* Game End Overlay */
+.game-end-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.game-end-modal {
+  background: var(--bg-secondary);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.game-end-modal h2 {
+  margin-bottom: var(--spacing-lg);
+  color: var(--gem-gold);
+}
+
+.final-scores {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+}
+
+.score-row.winner {
+  background: rgba(243, 156, 18, 0.2);
+  border: 1px solid var(--gem-gold);
+}
+
+.score-row .rank {
+  font-weight: bold;
+  color: var(--text-secondary);
+  width: 30px;
+}
+
+.score-row .player-name {
+  flex: 1;
+  text-align: left;
+}
+
+.score-row .score {
+  font-weight: bold;
+}
+
+.score-row .winner-badge {
+  font-size: 1.2rem;
+}
+
+/* =============================================================================
+   LANDING PAGE (Temporary for local dev)
+   ============================================================================= */
+
+.landing-page {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+.landing-content {
+  text-align: center;
+  max-width: 500px;
+}
+
+.landing-content h1 {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-sm);
+  background: linear-gradient(90deg, var(--gem-ruby), var(--gem-gold), var(--gem-emerald));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.landing-content .subtitle {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  margin-bottom: var(--spacing-xl);
+}
+
+.landing-info {
+  background: var(--bg-card);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.landing-info p {
+  margin: var(--spacing-sm) 0;
+}
+
+.landing-actions {
+  margin-bottom: var(--spacing-xl);
+}
+
+.landing-actions .btn {
+  font-size: 1.1rem;
+  padding: var(--spacing-md) var(--spacing-xl);
+}
+
+.landing-status {
+  background: var(--bg-secondary);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+
+.landing-status h3 {
+  margin-bottom: var(--spacing-md);
+  color: var(--accent);
+}
+
+.landing-status ul {
+  list-style: none;
+}
+
+.landing-status li {
+  padding: var(--spacing-xs) 0;
+}
+
+.landing-status code {
+  background: var(--bg-card);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+}
+
+/* =============================================================================
+   GAME BOARD LAYOUT
+   ============================================================================= */
+
+.game-board {
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Card Market - includes deck stacks and face-up cards */
+.card-market {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.market-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.card-slot {
+  width: 100px;
+  height: 140px;
+  border-radius: var(--radius-md);
+}
+
+.card-slot.empty {
+  background: var(--bg-primary);
+  opacity: 0.3;
+  border: 2px dashed var(--text-secondary);
+}
+
+/* Gem Bank - Right-Center */
+.gem-bank {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+}
+
+.gem-stack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.gem-selected-indicator {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: var(--radius-round);
+}
+
+/* Nobles Area - Far Right */
+.nobles-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-width: 80px;
+}
+
+/* =============================================================================
+   PLAYER PANELS
+   ============================================================================= */
+
+.player-panel {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  min-width: 200px;
+  transition: var(--transition-fast);
+}
+
+.player-panel.current-turn {
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+.player-panel.local-player {
+  background: var(--bg-card);
+}
+
+/* Opponent panels in sidebar - compact style */
+.player-panel.position-opponent {
+  padding: var(--spacing-sm);
+  font-size: 0.9rem;
+}
+
+.player-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--bg-primary);
+}
+
+.player-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.you-indicator {
+  color: var(--accent);
+  font-size: 0.85em;
+}
+
+.player-prestige {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.prestige-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--gem-gold);
+}
+
+.prestige-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.turn-indicator {
+  font-size: 1.2rem;
+}
+
+.player-resources-grid {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.color-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.column-gem {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.column-gem.clickable {
+  cursor: pointer;
+}
+
+.column-gem.clickable:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(255, 200, 50, 0.5);
+}
+
+.column-gem.selected-for-discard {
+  box-shadow: 0 0 0 3px var(--gem-ruby), 0 0 12px rgba(231, 76, 60, 0.6);
+}
+
+.column-gem.selected-for-discard .gem-token {
+  opacity: 0.7;
+}
+
+.discard-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--gem-ruby);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 8px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+/* Discard mode styling */
+.player-resources-grid.discard-mode {
+  padding: var(--spacing-sm);
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--gem-ruby);
+}
+
+.gem-placeholder {
+  width: 28px;
+  height: 28px;
+}
+
+.column-cards {
+  min-width: 60px;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.empty-indicator {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.card-stack {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Purchased cards - same style as reserved cards */
+.purchased-card {
+  width: 60px;
+  height: 80px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--text-secondary);
+  position: relative;
+}
+
+/* Gem-colored purchased card backgrounds - based on bonus gem */
+.purchased-card:has(.card-bonus.gem-emerald) {
+  background-color: rgba(46, 204, 113, 0.2);
+  border-color: var(--gem-emerald);
+}
+
+.purchased-card:has(.card-bonus.gem-diamond) {
+  background-color: rgba(236, 240, 241, 0.25);
+  border-color: var(--gem-diamond);
+}
+
+.purchased-card:has(.card-bonus.gem-sapphire) {
+  background-color: rgba(52, 152, 219, 0.2);
+  border-color: var(--gem-sapphire);
+}
+
+.purchased-card:has(.card-bonus.gem-onyx) {
+  background-color: rgba(44, 62, 80, 0.35);
+  border-color: var(--gem-onyx);
+}
+
+.purchased-card:has(.card-bonus.gem-ruby) {
+  background-color: rgba(231, 76, 60, 0.2);
+  border-color: var(--gem-ruby);
+}
+
+.purchased-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.purchased-card .card-prestige {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--gem-gold);
+}
+
+.purchased-card .card-bonus {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.purchased-card-cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: auto;
+}
+
+.player-reserved {
+  margin-top: var(--spacing-sm);
+}
+
+.reserved-cards {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.reserved-card {
+  width: 60px;
+  height: 80px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--text-secondary);
+  transition: var(--transition-fast);
+}
+
+/* Gem-colored reserved card backgrounds - based on bonus gem */
+.reserved-card:has(.card-bonus.gem-emerald) {
+  background-color: rgba(46, 204, 113, 0.2);
+  border-color: var(--gem-emerald);
+}
+
+.reserved-card:has(.card-bonus.gem-diamond) {
+  background-color: rgba(236, 240, 241, 0.25);
+  border-color: var(--gem-diamond);
+}
+
+.reserved-card:has(.card-bonus.gem-sapphire) {
+  background-color: rgba(52, 152, 219, 0.2);
+  border-color: var(--gem-sapphire);
+}
+
+.reserved-card:has(.card-bonus.gem-onyx) {
+  background-color: rgba(44, 62, 80, 0.35);
+  border-color: var(--gem-onyx);
+}
+
+.reserved-card:has(.card-bonus.gem-ruby) {
+  background-color: rgba(231, 76, 60, 0.2);
+  border-color: var(--gem-ruby);
+}
+
+/* Reserved card interactive states */
+.reserved-card.purchasable {
+  cursor: pointer;
+  border-width: 2px;
+  border-color: var(--success);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
+}
+
+.reserved-card.purchasable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
+}
+
+.reserved-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+.reserved-card.disabled {
+  opacity: 0.7;
+}
+
+.reserved-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.reserved-card .card-prestige {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--gem-gold);
+}
+
+.reserved-card .card-bonus {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.reserved-card-cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: auto;
+}
+
+.cost-pip {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+}
+
+.player-reserved-count {
+  margin-top: var(--spacing-sm);
+}
+
+.nobles-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* =============================================================================
+   ACTION PANEL
+   ============================================================================= */
+
+.action-panel {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-width: 280px;
+}
+
+.selection-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+}
+
+.selection-status.ready {
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid var(--success);
+}
+
+.selection-status.selecting {
+  background: rgba(243, 156, 18, 0.2);
+  border: 1px solid var(--warning);
+}
+
+.selection-status.waiting {
+  opacity: 0.7;
+}
+
+.selection-status.discard-required {
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid var(--error);
+}
+
+.status-icon {
+  font-size: 1.2rem;
+}
+
+.selected-gems-preview {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.selected-gem {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.selected-gem .remove-icon {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  background: var(--error);
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  color: white;
+}
+
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+.gem-count-indicator {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.gem-count-indicator .warning {
+  color: var(--warning);
+}
+
+/* =============================================================================
+   GEM TOKENS
+   ============================================================================= */
+
+.gem-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  border: 2px solid transparent;
+  transition: var(--transition-fast);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.gem-token.size-small {
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+}
+
+.gem-token.size-medium {
+  width: 36px;
+  height: 36px;
+  font-size: 0.9rem;
+}
+
+.gem-token.size-large {
+  width: 48px;
+  height: 48px;
+  font-size: 1rem;
+}
+
+.gem-token:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.gem-token.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.gem-token:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.gem-emerald { background-color: var(--gem-emerald); color: white; }
+.gem-diamond { background-color: var(--gem-diamond); color: #333; }
+.gem-sapphire { background-color: var(--gem-sapphire); color: white; }
+.gem-onyx { background-color: var(--gem-onyx); color: white; }
+.gem-ruby { background-color: var(--gem-ruby); color: white; }
+.gem-gold { background-color: var(--gem-gold); color: #333; }
+
+/* =============================================================================
+   DEVELOPMENT CARDS
+   ============================================================================= */
+
+.development-card {
+  width: 100px;
+  height: 140px;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 2px solid transparent;
+}
+
+/* Gem-colored card backgrounds - based on bonus gem */
+.development-card:has(.card-bonus.gem-emerald) {
+  background-color: rgba(46, 204, 113, 0.15);
+}
+
+.development-card:has(.card-bonus.gem-diamond) {
+  background-color: rgba(236, 240, 241, 0.2);
+}
+
+.development-card:has(.card-bonus.gem-sapphire) {
+  background-color: rgba(52, 152, 219, 0.15);
+}
+
+.development-card:has(.card-bonus.gem-onyx) {
+  background-color: rgba(44, 62, 80, 0.25);
+}
+
+.development-card:has(.card-bonus.gem-ruby) {
+  background-color: rgba(231, 76, 60, 0.15);
+}
+
+.development-card:hover:not(.disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.development-card.purchasable {
+  border-color: var(--success);
+}
+
+.development-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+.development-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: auto;
+}
+
+.card-prestige {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--gem-gold);
+}
+
+.card-bonus {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.card-costs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+}
+
+.card-cost {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-cost .cost-value {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Deck Card */
+.deck-card {
+  width: 100px;
+  height: 140px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-card);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.deck-card.reservable {
+  border-color: var(--warning);
+}
+
+.deck-card.reservable:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.deck-card:not(.reservable) {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.deck-tier {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.deck-count {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* =============================================================================
+   NOBLE TILES
+   ============================================================================= */
+
+.noble-tile {
+  width: 110px;
+  height: 70px;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition-fast);
+}
+
+.noble-tile.eligible {
+  box-shadow: 0 0 0 2px var(--success);
+  cursor: pointer;
+}
+
+.noble-tile.eligible:hover {
+  transform: scale(1.05);
+}
+
+.noble-prestige {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--gem-gold);
+  margin-bottom: var(--spacing-xs);
+}
+
+.noble-requirements {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.noble-requirement {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.requirement-value {
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* =============================================================================
+   BUTTONS
+   ============================================================================= */
+
+.btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 600;
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.btn-secondary {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--text-secondary);
+}
+
+.btn-small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.85rem;
+}
+
+.btn-tiny {
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  min-width: unset;
+}
+
+.btn-large {
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: 1.1rem;
+}
+
+.btn-count {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid transparent;
+}
+
+.btn-count.active {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* =============================================================================
+   INPUTS
+   ============================================================================= */
+
+.input {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--bg-card);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+}
+
+.room-code-input {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 2px;
+}

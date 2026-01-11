@@ -1,0 +1,24 @@
+{
+  "name": "splendubious",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Discord Activity application based on the board game Splendor",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "dev:backend": "npm run dev --workspace=@splendubious/backend",
+    "dev:frontend": "npm run dev --workspace=@splendubious/frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
