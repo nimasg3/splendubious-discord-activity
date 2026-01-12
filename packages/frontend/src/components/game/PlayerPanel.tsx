@@ -116,8 +116,11 @@ export function PlayerPanel({
         )}
       </div>
 
-      {/* Player resources - Gems and Cards aligned by color */}
-      <div className={`player-resources-grid ${isDiscardMode ? 'discard-mode' : ''}`}>
+      {/* Player resources - Gems and Cards aligned by color, with reserved cards on the right */}
+      <div className="player-cards-section">
+        <div className="player-cards-row">
+          {/* Purchased cards grid */}
+          <div className={`player-resources-grid ${isDiscardMode ? 'discard-mode' : ''}`}>
         {GEM_COLORS.map((color) => {
           const gemCount = player.gems[color] || 0;
           const cards = cardsByBonus[color];
@@ -202,43 +205,45 @@ export function PlayerPanel({
             </div>
           );
         })()}
-      </div>
-
-      {/* Reserved Cards - visible to all players, purchasable by local player */}
-      {player.reservedCards && player.reservedCards.length > 0 && (
-        <div className="player-reserved">
-          <div className="section-label">Reserved ({player.reservedCards.length}/3)</div>
-          <div className="reserved-cards">
-            {player.reservedCards.map((card) => {
-              const canPurchase = isReservedCardPurchasable(card.id);
-              const isSelected = isReservedCardSelected(card.id);
-              return (
-                <div 
-                  key={card.id} 
-                  className={`reserved-card tier-${card.tier} ${canPurchase ? 'purchasable' : ''} ${isSelected ? 'selected' : ''} ${isLocalPlayer && !canPurchase ? 'disabled' : ''}`}
-                  onClick={() => handleReservedCardClick(card.id)}
-                  role={canPurchase ? 'button' : undefined}
-                  tabIndex={canPurchase ? 0 : undefined}
-                >
-                  <div className="reserved-card-header">
-                    {card.prestigePoints > 0 && <span className="card-prestige">{card.prestigePoints}</span>}
-                    <span className={`card-bonus gem-${card.bonus}`} />
-                  </div>
-                  <div className="reserved-card-cost">
-                    {GEM_COLORS.map((gem) => {
-                      const cost = card.cost[gem];
-                      if (!cost || cost === 0) return null;
-                      return (
-                        <span key={gem} className={`cost-pip gem-${gem}`}>{cost}</span>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
-      )}
+
+        {/* Reserved Cards - visible to all players, purchasable by local player */}
+        {player.reservedCards && player.reservedCards.length > 0 && (
+          <div className="player-reserved">
+            <div className="section-label">Reserved ({player.reservedCards.length}/3)</div>
+            <div className="reserved-cards">
+              {player.reservedCards.map((card) => {
+                const canPurchase = isReservedCardPurchasable(card.id);
+                const isSelected = isReservedCardSelected(card.id);
+                return (
+                  <div 
+                    key={card.id} 
+                    className={`reserved-card tier-${card.tier} ${canPurchase ? 'purchasable' : ''} ${isSelected ? 'selected' : ''} ${isLocalPlayer && !canPurchase ? 'disabled' : ''}`}
+                    onClick={() => handleReservedCardClick(card.id)}
+                    role={canPurchase ? 'button' : undefined}
+                    tabIndex={canPurchase ? 0 : undefined}
+                  >
+                    <div className="reserved-card-header">
+                      {card.prestigePoints > 0 && <span className="card-prestige">{card.prestigePoints}</span>}
+                      <span className={`card-bonus gem-${card.bonus}`} />
+                    </div>
+                    <div className="reserved-card-cost">
+                      {GEM_COLORS.map((gem) => {
+                        const cost = card.cost[gem];
+                        if (!cost || cost === 0) return null;
+                        return (
+                          <span key={gem} className={`cost-pip gem-${gem}`}>{cost}</span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        </div>
+      </div>
 
       {/* Nobles */}
       {player.nobles.length > 0 && (
@@ -250,6 +255,7 @@ export function PlayerPanel({
                 key={noble.id}
                 noble={noble}
                 isEligible={false}
+                size="small"
               />
             ))}
           </div>

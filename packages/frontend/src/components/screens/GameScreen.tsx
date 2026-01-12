@@ -37,9 +37,13 @@ export function GameScreen(): JSX.Element {
   const localPlayerIndex = gameState.players.findIndex(p => p.id === user?.id);
   const playerCount = gameState.players.length;
 
-  // Local player at bottom, all opponents stacked on the left sidebar
+  // Local player at bottom, opponents ordered by turn order starting from the player after local
   const localPlayer = gameState.players[localPlayerIndex];
-  const opponents = gameState.players.filter((_, i) => i !== localPlayerIndex);
+  const opponentsInTurnOrder: typeof gameState.players = [];
+  for (let i = 1; i < playerCount; i++) {
+    const nextIndex = (localPlayerIndex + i) % playerCount;
+    opponentsInTurnOrder.push(gameState.players[nextIndex]);
+  }
 
   return (
     <div 
@@ -72,41 +76,45 @@ export function GameScreen(): JSX.Element {
         )}
       </div>
 
-      {/* Opponents sidebar (left) */}
-      {opponents.length > 0 && (
-        <div className="opponents-sidebar">
-          {opponents.map((player) => (
-            <PlayerPanel
-              key={player.id}
-              player={player}
-              isCurrentPlayer={gameState.players.indexOf(player) === currentPlayerIndex}
-              isLocalPlayer={false}
-              position="opponent"
-            />
-          ))}
-        </div>
-      )}
+      {/* Players sidebar (left) - opponents in turn order, local player at bottom */}
+      <div className="players-sidebar">
+        {/* Opponents in turn order (player after local at top) */}
+        {opponentsInTurnOrder.length > 0 && (
+          <div className="opponents-section">
+            {opponentsInTurnOrder.map((player) => (
+              <PlayerPanel
+                key={player.id}
+                player={player}
+                isCurrentPlayer={gameState.players.indexOf(player) === currentPlayerIndex}
+                isLocalPlayer={false}
+                position="opponent"
+              />
+            ))}
+          </div>
+        )}
 
-      {/* Game board (center) */}
-      <div className="game-area">
-        <GameBoard gameState={gameState} />
+        {/* Local player */}
+        {localPlayer && (
+          <div className="local-player-section">
+            <PlayerPanel
+              player={localPlayer}
+              isCurrentPlayer={localPlayerIndex === currentPlayerIndex}
+              isLocalPlayer={true}
+              position="bottom"
+            />
+          </div>
+        )}
       </div>
 
-      {/* Local player area (bottom) */}
-      {localPlayer && (
-        <div className="player-area bottom">
-          <PlayerPanel
-            player={localPlayer}
-            isCurrentPlayer={localPlayerIndex === currentPlayerIndex}
-            isLocalPlayer={true}
-            position="bottom"
-          />
+      {/* Game board (right) - fills available space */}
+      <div className="game-area">
+        <div className="game-board-wrapper">
+          <GameBoard gameState={gameState} />
+          {/* Action panel - anchored under game board */}
+          <div className="action-panel-container">
+            <ActionPanel />
+          </div>
         </div>
-      )}
-
-      {/* Action panel - always visible for local player during their turn */}
-      <div className="action-panel-container">
-        <ActionPanel />
       </div>
 
       {/* Game end overlay */}

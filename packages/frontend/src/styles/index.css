@@ -99,12 +99,11 @@ button {
   height: 100%;
   width: 100%;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 40% 60%;
   grid-template-areas:
     "status status"
-    "opponents game"
-    "bottom bottom";
+    "players game";
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   overflow: hidden;
@@ -509,8 +508,32 @@ button {
   margin-left: var(--spacing-md);
 }
 
+/* Players sidebar - left 40% column with opponents and local player */
+.players-sidebar {
+  grid-area: players;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  overflow-y: auto;
+  max-height: 100%;
+  padding: 4px;
+  margin: -4px;
+}
+
+.opponents-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.local-player-section {
+  margin-top: auto;
+  padding-top: var(--spacing-md);
+  border-top: 2px solid var(--bg-secondary);
+}
+
+/* Legacy - keep for backwards compatibility */
 .opponents-sidebar {
-  grid-area: opponents;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -530,17 +553,29 @@ button {
 .game-area {
   grid-area: game;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  overflow: hidden;
+}
+
+.game-board-wrapper {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: var(--spacing-md);
   overflow: auto;
 }
 
 .action-panel-container {
-  position: fixed;
-  bottom: var(--spacing-md);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-shrink: 0;
+  margin-top: var(--spacing-md);
 }
 
 /* Game End Overlay */
@@ -689,12 +724,24 @@ button {
 .game-board {
   display: flex;
   flex-direction: row;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-md);
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   max-width: 100%;
-  overflow-x: auto;
+  overflow: auto;
+}
+
+.board-section-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--bg-primary);
+  text-align: center;
 }
 
 /* Card Market - includes deck stacks and face-up cards */
@@ -711,8 +758,8 @@ button {
 }
 
 .card-slot {
-  width: 100px;
-  height: 140px;
+  width: 130px;
+  height: 180px;
   border-radius: var(--radius-md);
 }
 
@@ -723,6 +770,11 @@ button {
 }
 
 /* Gem Bank - Right-Center */
+.gem-bank-section {
+  display: flex;
+  flex-direction: column;
+}
+
 .gem-bank {
   display: flex;
   flex-direction: column;
@@ -785,6 +837,14 @@ button {
   font-size: 0.9rem;
 }
 
+.player-panel.position-opponent .player-cards-section {
+  gap: var(--spacing-md);
+}
+
+.player-panel.position-opponent .player-reserved {
+  padding-left: var(--spacing-sm);
+}
+
 .player-header {
   display: flex;
   align-items: center;
@@ -825,10 +885,24 @@ button {
   font-size: 1.2rem;
 }
 
+/* Player cards section - label above, horizontal layout for purchased and reserved */
+.player-cards-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.player-cards-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+}
+
 .player-resources-grid {
   display: flex;
   gap: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
+  flex-shrink: 0;
 }
 
 .color-column {
@@ -890,8 +964,8 @@ button {
 }
 
 .gem-placeholder {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 }
 
 .column-cards {
@@ -933,40 +1007,42 @@ button {
 
 /* Gem-colored purchased card backgrounds - based on bonus gem */
 .purchased-card:has(.card-bonus.gem-emerald) {
-  background-color: rgba(46, 204, 113, 0.2);
+  background-color: #1a3d2a;
   border-color: var(--gem-emerald);
 }
 
 .purchased-card:has(.card-bonus.gem-diamond) {
-  background-color: rgba(236, 240, 241, 0.25);
+  background-color: #3a3d3e;
   border-color: var(--gem-diamond);
 }
 
 .purchased-card:has(.card-bonus.gem-sapphire) {
-  background-color: rgba(52, 152, 219, 0.2);
+  background-color: #1a2d3d;
   border-color: var(--gem-sapphire);
 }
 
 .purchased-card:has(.card-bonus.gem-onyx) {
-  background-color: rgba(44, 62, 80, 0.35);
-  border-color: var(--gem-onyx);
+  background-color: #1a1f24;
+  border-color: #5a6570;
 }
 
 .purchased-card:has(.card-bonus.gem-ruby) {
-  background-color: rgba(231, 76, 60, 0.2);
+  background-color: #3d1a1a;
   border-color: var(--gem-ruby);
 }
 
 .purchased-card-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
+  width: 100%;
 }
 
 .purchased-card .card-prestige {
   font-size: 0.9rem;
   font-weight: bold;
   color: var(--gem-gold);
+  margin-right: auto;
 }
 
 .purchased-card .card-bonus {
@@ -982,8 +1058,12 @@ button {
   margin-top: auto;
 }
 
+/* Reserved cards section - now positioned horizontally */
 .player-reserved {
-  margin-top: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--spacing-md);
+  border-left: 2px solid var(--bg-primary);
 }
 
 .reserved-cards {
@@ -1005,27 +1085,27 @@ button {
 
 /* Gem-colored reserved card backgrounds - based on bonus gem */
 .reserved-card:has(.card-bonus.gem-emerald) {
-  background-color: rgba(46, 204, 113, 0.2);
+  background-color: #1a3d2a;
   border-color: var(--gem-emerald);
 }
 
 .reserved-card:has(.card-bonus.gem-diamond) {
-  background-color: rgba(236, 240, 241, 0.25);
+  background-color: #3a3d3e;
   border-color: var(--gem-diamond);
 }
 
 .reserved-card:has(.card-bonus.gem-sapphire) {
-  background-color: rgba(52, 152, 219, 0.2);
+  background-color: #1a2d3d;
   border-color: var(--gem-sapphire);
 }
 
 .reserved-card:has(.card-bonus.gem-onyx) {
-  background-color: rgba(44, 62, 80, 0.35);
-  border-color: var(--gem-onyx);
+  background-color: #1a1f24;
+  border-color: #5a6570;
 }
 
 .reserved-card:has(.card-bonus.gem-ruby) {
-  background-color: rgba(231, 76, 60, 0.2);
+  background-color: #3d1a1a;
   border-color: var(--gem-ruby);
 }
 
@@ -1053,7 +1133,7 @@ button {
 
 .reserved-card-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
 }
 
@@ -1061,6 +1141,7 @@ button {
   font-size: 0.9rem;
   font-weight: bold;
   color: var(--gem-gold);
+  margin-right: auto;
 }
 
 .reserved-card .card-bonus {
@@ -1203,21 +1284,21 @@ button {
 }
 
 .gem-token.size-small {
-  width: 28px;
-  height: 28px;
-  font-size: 0.75rem;
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
 }
 
 .gem-token.size-medium {
-  width: 36px;
-  height: 36px;
-  font-size: 0.9rem;
+  width: 44px;
+  height: 44px;
+  font-size: 1rem;
 }
 
 .gem-token.size-large {
-  width: 48px;
-  height: 48px;
-  font-size: 1rem;
+  width: 56px;
+  height: 56px;
+  font-size: 1.1rem;
 }
 
 .gem-token:hover:not(:disabled) {
@@ -1247,11 +1328,11 @@ button {
    ============================================================================= */
 
 .development-card {
-  width: 100px;
-  height: 140px;
+  width: 130px;
+  height: 180px;
   background-color: var(--bg-card);
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
+  padding: var(--spacing-md);
   cursor: pointer;
   transition: var(--transition-fast);
   display: flex;
@@ -1288,6 +1369,12 @@ button {
 
 .development-card.purchasable {
   border-color: var(--success);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
+}
+
+.development-card.purchasable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
 }
 
 .development-card.selected {
@@ -1308,14 +1395,14 @@ button {
 }
 
 .card-prestige {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: var(--gem-gold);
 }
 
 .card-bonus {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
   border: 2px solid rgba(255,255,255,0.3);
 }
@@ -1345,8 +1432,8 @@ button {
 
 /* Deck Card */
 .deck-card {
-  width: 100px;
-  height: 140px;
+  width: 130px;
+  height: 180px;
   background: var(--bg-primary);
   border-radius: var(--radius-md);
   display: flex;
@@ -1374,13 +1461,13 @@ button {
 }
 
 .deck-tier {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
   color: var(--text-secondary);
 }
 
 .deck-count {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--text-secondary);
 }
 
@@ -1389,14 +1476,36 @@ button {
    ============================================================================= */
 
 .noble-tile {
-  width: 110px;
-  height: 70px;
+  width: 130px;
+  height: 85px;
   background-color: var(--bg-card);
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
   transition: var(--transition-fast);
+}
+
+.noble-tile.size-small {
+  width: 60px;
+  height: 50px;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+}
+
+.noble-tile.size-small .noble-prestige {
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+
+.noble-tile.size-small .noble-requirements {
+  gap: 2px;
+}
+
+.noble-tile.size-small .noble-requirement {
+  width: 14px;
+  height: 14px;
+  font-size: 0.6rem;
 }
 
 .noble-tile.eligible {
@@ -1409,7 +1518,7 @@ button {
 }
 
 .noble-prestige {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: var(--gem-gold);
   margin-bottom: var(--spacing-xs);
@@ -1419,18 +1528,18 @@ button {
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   margin-top: auto;
 }
 
 .noble-requirement {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: bold;
 }
 

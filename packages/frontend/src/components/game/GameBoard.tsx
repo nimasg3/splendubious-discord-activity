@@ -114,6 +114,7 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
     <div className="game-board">
       {/* Card Market with Tier Decks inline */}
       <div className="card-market">
+        <div className="board-section-label">DEVELOPMENT CARDS</div>
         {/* Tier 3 - Top row */}
         <div className="market-row tier-3">
           <DeckCard
@@ -122,19 +123,19 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
             onClick={() => handleDeckClick(3)}
             canReserve={canReserveFromDeck(3)}
           />
-          {gameState.market.tier3.map((card) => (
-            <DevelopmentCard
-              key={card.id}
-              card={card}
-              onClick={() => handleCardClick(card)}
-              canPurchase={isCardPurchasable(card)}
-              canReserve={isCardReservable(card)}
-              isSelected={isCardSelected(card.id)}
-            />
-          ))}
-          {/* Fill empty slots */}
-          {Array(4 - gameState.market.tier3.length).fill(null).map((_, i) => (
-            <div key={`empty-3-${i}`} className="card-slot empty" />
+          {gameState.market.tier3.map((card, index) => (
+            card ? (
+              <DevelopmentCard
+                key={card.id}
+                card={card}
+                onClick={() => handleCardClick(card)}
+                canPurchase={isCardPurchasable(card)}
+                canReserve={isCardReservable(card)}
+                isSelected={isCardSelected(card.id)}
+              />
+            ) : (
+              <div key={`empty-3-${index}`} className="card-slot empty" />
+            )
           ))}
         </div>
 
@@ -146,18 +147,19 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
             onClick={() => handleDeckClick(2)}
             canReserve={canReserveFromDeck(2)}
           />
-          {gameState.market.tier2.map((card) => (
-            <DevelopmentCard
-              key={card.id}
-              card={card}
-              onClick={() => handleCardClick(card)}
-              canPurchase={isCardPurchasable(card)}
-              canReserve={isCardReservable(card)}
-              isSelected={isCardSelected(card.id)}
-            />
-          ))}
-          {Array(4 - gameState.market.tier2.length).fill(null).map((_, i) => (
-            <div key={`empty-2-${i}`} className="card-slot empty" />
+          {gameState.market.tier2.map((card, index) => (
+            card ? (
+              <DevelopmentCard
+                key={card.id}
+                card={card}
+                onClick={() => handleCardClick(card)}
+                canPurchase={isCardPurchasable(card)}
+                canReserve={isCardReservable(card)}
+                isSelected={isCardSelected(card.id)}
+              />
+            ) : (
+              <div key={`empty-2-${index}`} className="card-slot empty" />
+            )
           ))}
         </div>
 
@@ -169,49 +171,54 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
             onClick={() => handleDeckClick(1)}
             canReserve={canReserveFromDeck(1)}
           />
-          {gameState.market.tier1.map((card) => (
-            <DevelopmentCard
-              key={card.id}
-              card={card}
-              onClick={() => handleCardClick(card)}
-              canPurchase={isCardPurchasable(card)}
-              canReserve={isCardReservable(card)}
-              isSelected={isCardSelected(card.id)}
-            />
-          ))}
-          {Array(4 - gameState.market.tier1.length).fill(null).map((_, i) => (
-            <div key={`empty-1-${i}`} className="card-slot empty" />
+          {gameState.market.tier1.map((card, index) => (
+            card ? (
+              <DevelopmentCard
+                key={card.id}
+                card={card}
+                onClick={() => handleCardClick(card)}
+                canPurchase={isCardPurchasable(card)}
+                canReserve={isCardReservable(card)}
+                isSelected={isCardSelected(card.id)}
+              />
+            ) : (
+              <div key={`empty-1-${index}`} className="card-slot empty" />
+            )
           ))}
         </div>
       </div>
 
       {/* Gem Bank - Right-Center */}
-      <div className="gem-bank">
-        {ALL_GEMS.map((gem) => {
-          const isGold = gem === 'gold';
-          return (
-            <div key={gem} className="gem-stack">
-              <GemToken
-                color={gem}
-                count={gameState.bank[gem] || 0}
-                onClick={isGold ? undefined : () => handleGemClick(gem)}
-                isDisabled={isGold || (!isGold && !canTakeGem(gem))}
-                isSelected={!isGold && isGemSelected(gem)}
-                size="large"
-              />
-              {/* Show selection indicator */}
-              {!isGold && selectedGems.filter(g => g === gem).length > 0 && (
-                <div className="gem-selected-indicator">
-                  +{selectedGems.filter(g => g === gem).length}
-                </div>
-              )}
-            </div>
-          );
-        })}
+      <div className="gem-bank-section">
+        <div className="board-section-label">GEMS</div>
+        <div className="gem-bank">
+          {ALL_GEMS.map((gem) => {
+            const isGold = gem === 'gold';
+            return (
+              <div key={gem} className="gem-stack">
+                <GemToken
+                  color={gem}
+                  count={gameState.bank[gem] || 0}
+                  onClick={isGold ? undefined : () => handleGemClick(gem)}
+                  isDisabled={isGold || (!isGold && !canTakeGem(gem))}
+                  isSelected={!isGold && isGemSelected(gem)}
+                  size="large"
+                />
+                {/* Show selection indicator */}
+                {!isGold && selectedGems.filter(g => g === gem).length > 0 && (
+                  <div className="gem-selected-indicator">
+                    +{selectedGems.filter(g => g === gem).length}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Nobles - Far Right */}
       <div className="nobles-area">
+        <div className="board-section-label">NOBLES</div>
         {gameState.nobles.map((noble) => (
           <NobleTile
             key={noble.id}

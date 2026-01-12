@@ -503,13 +503,16 @@ export function calculatePayment(
 
 /**
  * Removes a card from the market by ID (mutates state)
+ * Sets the slot to null instead of removing to preserve positions
  */
 function removeCardFromMarket(state: GameState, cardId: string): DevelopmentCard | undefined {
   for (const tierKey of ['tier1', 'tier2', 'tier3'] as const) {
     const market = state.market[tierKey];
-    const index = market.findIndex(c => c.id === cardId);
+    const index = market.findIndex(c => c?.id === cardId);
     if (index !== -1) {
-      return market.splice(index, 1)[0];
+      const card = market[index]!;
+      market[index] = null;
+      return card;
     }
   }
   return undefined;
@@ -517,14 +520,18 @@ function removeCardFromMarket(state: GameState, cardId: string): DevelopmentCard
 
 /**
  * Refills a market slot from the deck (mutates state)
+ * Fills the first null slot in the market
  */
 function refillMarketSlot(state: GameState, tier: 1 | 2 | 3): void {
   const deck = getDeckByTierMutable(state, tier);
   const market = getMarketByTierMutable(state, tier);
   
-  if (deck.length > 0 && market.length < 4) {
+  // Find the first null slot
+  const emptyIndex = market.findIndex(c => c === null);
+  
+  if (deck.length > 0 && emptyIndex !== -1) {
     const card = deck.shift()!;
-    market.push(card);
+    market[emptyIndex] = card;
   }
 }
 
@@ -542,7 +549,7 @@ function getDeckByTierMutable(state: GameState, tier: 1 | 2 | 3): DevelopmentCar
 /**
  * Gets the market array for a tier (mutable reference)
  */
-function getMarketByTierMutable(state: GameState, tier: 1 | 2 | 3): DevelopmentCard[] {
+function getMarketByTierMutable(state: GameState, tier: 1 | 2 | 3): (DevelopmentCard | null)[] {
   switch (tier) {
     case 1: return state.market.tier1;
     case 2: return state.market.tier2;

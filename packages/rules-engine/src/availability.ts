@@ -314,18 +314,18 @@ export function getCardShortfall(
 // =============================================================================
 
 /**
- * Gets all cards visible in the market
+ * Gets all cards visible in the market (excludes null slots)
  */
 export function getMarketCards(state: GameState): DevelopmentCard[] {
   return [
-    ...state.market.tier1,
-    ...state.market.tier2,
-    ...state.market.tier3,
+    ...state.market.tier1.filter((c): c is DevelopmentCard => c !== null),
+    ...state.market.tier2.filter((c): c is DevelopmentCard => c !== null),
+    ...state.market.tier3.filter((c): c is DevelopmentCard => c !== null),
   ];
 }
 
 /**
- * Gets market cards by tier
+ * Gets market cards by tier (excludes null slots)
  */
 export function getMarketCardsByTier(
   state: GameState,
@@ -333,11 +333,11 @@ export function getMarketCardsByTier(
 ): DevelopmentCard[] {
   switch (tier) {
     case 1:
-      return state.market.tier1;
+      return state.market.tier1.filter((c): c is DevelopmentCard => c !== null);
     case 2:
-      return state.market.tier2;
+      return state.market.tier2.filter((c): c is DevelopmentCard => c !== null);
     case 3:
-      return state.market.tier3;
+      return state.market.tier3.filter((c): c is DevelopmentCard => c !== null);
   }
 }
 

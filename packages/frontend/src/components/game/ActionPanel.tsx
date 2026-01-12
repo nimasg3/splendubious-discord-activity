@@ -48,11 +48,15 @@ export function ActionPanel(): JSX.Element {
           if (selectedAction.gems.length === 2 && selectedAction.gems[0] === selectedAction.gems[1]) {
             const gem = selectedAction.gems[0];
             if (gem) {
+              console.log('Taking 2 same gems:', gem);
               await takeTwoGems(gem);
             }
           } else if (selectedAction.gems.length >= 1 && selectedAction.gems.length <= 3) {
             // Taking 1-3 different gems
-            await takeThreeGems(selectedAction.gems as [GemColor, GemColor, GemColor]);
+            console.log('Taking gems:', selectedAction.gems);
+            await takeThreeGems(selectedAction.gems);
+          } else {
+            console.log('Invalid gem selection:', selectedAction.gems);
           }
           break;
         case 'purchase_card':

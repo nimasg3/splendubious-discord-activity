@@ -50,9 +50,9 @@ export interface ClientGameState {
   currentPlayerIndex: number;
   bank: Record<string, number>;
   market: {
-    tier1: CardDisplay[];
-    tier2: CardDisplay[];
-    tier3: CardDisplay[];
+    tier1: (CardDisplay | null)[];
+    tier2: (CardDisplay | null)[];
+    tier3: (CardDisplay | null)[];
   };
   nobles: NobleDisplay[];
   round: number;

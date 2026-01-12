@@ -194,12 +194,12 @@ export function toClientGameState(
  * Creates a client-visible player state
  *
  * @param player - Player state
- * @param isRequestingPlayer - Whether this is the player receiving the state
+ * @param _isRequestingPlayer - Whether this is the player receiving the state (unused, kept for API compatibility)
  * @returns Projected player state
  */
 export function toClientPlayerState(
   player: GameState['players'][0],
-  isRequestingPlayer: boolean
+  _isRequestingPlayer: boolean
 ): ClientPlayerState {
   return {
     id: player.id,

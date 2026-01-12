@@ -11,6 +11,7 @@ interface NobleTileProps {
   noble: NobleDisplay;
   isEligible: boolean;
   onClick?: () => void;
+  size?: 'normal' | 'small';
 }
 
 const GEM_COLORS: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
@@ -19,10 +20,11 @@ export function NobleTile({
   noble,
   isEligible,
   onClick,
+  size = 'normal',
 }: NobleTileProps): JSX.Element {
   return (
     <div
-      className={`noble-tile ${isEligible ? 'eligible' : ''}`}
+      className={`noble-tile ${isEligible ? 'eligible' : ''} size-${size}`}
       onClick={isEligible ? onClick : undefined}
       role={isEligible ? 'button' : undefined}
       tabIndex={isEligible ? 0 : undefined}

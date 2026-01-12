@@ -349,10 +349,10 @@ export function isGameInProgress(state: GameState): boolean {
  */
 export function findCardInMarket(state: GameState, cardId: string): DevelopmentCard | undefined {
   return (
-    state.market.tier1.find(c => c.id === cardId) ??
-    state.market.tier2.find(c => c.id === cardId) ??
-    state.market.tier3.find(c => c.id === cardId)
-  );
+    state.market.tier1.find(c => c?.id === cardId) ??
+    state.market.tier2.find(c => c?.id === cardId) ??
+    state.market.tier3.find(c => c?.id === cardId)
+  ) ?? undefined;
 }
 
 /**

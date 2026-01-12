@@ -202,7 +202,7 @@ interface GameContextValue {
   updatePlayerName: (name: string) => Promise<void>;
 
   // Game actions
-  takeThreeGems: (gems: [GemColor, GemColor, GemColor]) => Promise<void>;
+  takeThreeGems: (gems: GemColor[]) => Promise<void>;
   takeTwoGems: (gem: GemColor) => Promise<void>;
   reserveCard: (cardId: string | null, tier: CardTier) => Promise<void>;
   purchaseCard: (cardId: string) => Promise<void>;
@@ -383,16 +383,20 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
   }, []);
 
   // Game actions
-  const takeThreeGems = useCallback(async (gems: [GemColor, GemColor, GemColor]) => {
+  const takeThreeGems = useCallback(async (gems: GemColor[]) => {
     try {
+      console.log('takeThreeGems called with:', gems, 'playerId:', state.user?.id);
       const action: PlayerAction = {
         type: 'TAKE_THREE_GEMS',
         playerId: state.user!.id,
         gems,
       };
+      console.log('Sending action:', action);
       await socketClient.sendAction(action);
+      console.log('Action sent successfully');
       dispatch({ type: 'CLEAR_SELECTION' });
     } catch (error) {
+      console.error('takeThreeGems error:', error);
       dispatch({ type: 'SET_ERROR', error: (error as Error).message });
     }
   }, [state.user]);

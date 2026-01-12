@@ -103,12 +103,12 @@ export interface Player {
  * The card market showing available face-up cards
  */
 export interface CardMarket {
-  /** Face-up tier 1 cards (up to 4) */
-  tier1: DevelopmentCard[];
-  /** Face-up tier 2 cards (up to 4) */
-  tier2: DevelopmentCard[];
-  /** Face-up tier 3 cards (up to 4) */
-  tier3: DevelopmentCard[];
+  /** Face-up tier 1 cards (4 slots, null = empty) */
+  tier1: (DevelopmentCard | null)[];
+  /** Face-up tier 2 cards (4 slots, null = empty) */
+  tier2: (DevelopmentCard | null)[];
+  /** Face-up tier 3 cards (4 slots, null = empty) */
+  tier3: (DevelopmentCard | null)[];
 }
 
 /**
