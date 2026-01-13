@@ -7,7 +7,7 @@
  */
 
 import { useGame } from './context';
-import { LoadingScreen, MenuScreen, LobbyScreen, GameScreen } from './components';
+import { MenuScreen, LobbyScreen, GameScreen } from './components';
 
 // Temporary landing page for local development
 function LandingPage(): JSX.Element {

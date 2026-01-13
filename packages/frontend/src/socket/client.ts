@@ -343,7 +343,7 @@ export async function ping(): Promise<number> {
     }
     
     const start = Date.now();
-    socket.emit('ping', (serverTime) => {
+    socket.emit('ping', (_serverTime) => {
       const latency = Date.now() - start;
       resolve(latency);
     });

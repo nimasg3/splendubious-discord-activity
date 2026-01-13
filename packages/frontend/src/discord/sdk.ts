@@ -85,7 +85,7 @@ export async function getParticipants(): Promise<ActivityParticipant[]> {
  * Subscribes to participant changes
  */
 export function onParticipantsChange(
-  callback: (participants: ActivityParticipant[]) => void
+  _callback: (participants: ActivityParticipant[]) => void
 ): () => void {
   // TODO: Implement participant subscription
   // 1. Subscribe to ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE
@@ -96,7 +96,7 @@ export function onParticipantsChange(
 /**
  * Invites a user to the activity
  */
-export async function inviteUser(userId: string): Promise<void> {
+export async function inviteUser(_userId: string): Promise<void> {
   // TODO: Implement user invitation
   throw new Error('TODO: Implement inviteUser');
 }
@@ -109,7 +109,7 @@ export async function inviteUser(userId: string): Promise<void> {
  * Sets the activity layout mode
  */
 export async function setLayoutMode(
-  mode: 'focused' | 'pip' | 'grid'
+  _mode: 'focused' | 'pip' | 'grid'
 ): Promise<void> {
   // TODO: Implement layout mode setting
   throw new Error('TODO: Implement setLayoutMode');

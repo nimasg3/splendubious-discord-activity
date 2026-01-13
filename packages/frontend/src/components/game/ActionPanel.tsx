@@ -5,7 +5,6 @@
  */
 
 import { useGame } from '../../context';
-import { GemColor } from '@splendubious/rules-engine';
 import { GemToken } from './GemToken';
 
 export function ActionPanel(): JSX.Element {
