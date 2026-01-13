@@ -70,8 +70,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Build all packages
-        run: npm run build --workspaces
+      - name: Build rules-engine first
+        run: npm run build --workspace=@splendubious/rules-engine
+      
+      - name: Build frontend
+        run: npm run build --workspace=@splendubious/frontend
         env:
           VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
           VITE_DISCORD_CLIENT_ID: ${{ secrets.VITE_DISCORD_CLIENT_ID }}
