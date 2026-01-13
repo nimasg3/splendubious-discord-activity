@@ -44,6 +44,7 @@ const corsOptions = {
 console.log('CORS options:', corsOptions);
 
 // Configure Socket.IO
+// Note: App Runner doesn't support WebSockets, so we use polling only
 const io = new Server<
   ClientToServerEvents,
   ServerToClientEvents,
@@ -51,7 +52,7 @@ const io = new Server<
   SocketData
 >(httpServer, {
   cors: corsOptions,
-  transports: ['websocket', 'polling'],
+  transports: ['polling'],
   allowEIO3: true,
 });
 

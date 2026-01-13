@@ -76,12 +76,12 @@ export function connect(serverUrl?: string): GameSocket {
   const url = serverUrl || window.location.origin;
   
   socket = io(url, {
-    transports: ['websocket', 'polling'],
+    transports: ['polling'],
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    timeout: 10000,
+    timeout: 20000,
   });
   
   socket.on('connect', () => {
