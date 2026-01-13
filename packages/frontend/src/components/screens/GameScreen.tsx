@@ -8,7 +8,7 @@ import { useGame } from '../../context';
 import { GameBoard, PlayerPanel, ActionPanel } from '../game';
 
 export function GameScreen(): JSX.Element {
-  const { state, isMyTurn, clearSelection } = useGame();
+  const { state, isMyTurn, clearSelection, leaveRoom } = useGame();
   const { gameState, user, selectedAction } = state;
 
   // Handle right-click to clear selection
@@ -139,6 +139,9 @@ export function GameScreen(): JSX.Element {
                   </div>
                 ))}
             </div>
+            <button className="btn btn-primary return-to-menu-btn" onClick={leaveRoom}>
+              Return to Main Menu
+            </button>
           </div>
         </div>
       )}

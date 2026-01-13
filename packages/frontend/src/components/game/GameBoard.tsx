@@ -50,7 +50,18 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
     
     const { takeGems } = gameState.availableActions;
     
-    // If selecting for two same gems
+    // If already selected 3 different gems, disable all further selection
+    if (selectedAction.type === 'take_gems' && selectedAction.gems.length >= 3) {
+      return false;
+    }
+    
+    // If already selected 2 of the same gem, disable all further selection
+    if (selectedAction.type === 'take_gems' && selectedAction.gems.length === 2 && 
+        selectedAction.gems[0] === selectedAction.gems[1]) {
+      return false;
+    }
+    
+    // If selecting for two same gems (second selection of same gem)
     if (selectedAction.type === 'take_gems' && selectedAction.gems.length === 1 && selectedAction.gems[0] === gem) {
       return takeGems.availableForTwo.includes(gem);
     }
