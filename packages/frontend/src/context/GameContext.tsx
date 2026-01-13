@@ -239,8 +239,9 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
 
   // Initialize socket connection and subscriptions
   useEffect(() => {
-    // Connect to server
-    socketClient.connect();
+    // Connect to server (use VITE_SOCKET_URL env var, or fallback to localhost for dev)
+    const serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+    socketClient.connect(serverUrl);
     
     // Subscribe to events
     const unsubRoom = socketClient.onRoomUpdated((room) => {
