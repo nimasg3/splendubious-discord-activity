@@ -18,9 +18,9 @@ import {
   GemColor,
   GEM_COLORS,
   GAME_CONSTANTS,
-} from './types';
-import { cloneGameState, getPlayerById, getCurrentPlayer } from './initialization';
-import { validateAction, calculateEffectiveCost, getEligibleNobles } from './validators';
+} from './types.js';
+import { cloneGameState, getPlayerById, getCurrentPlayer } from './initialization.js';
+import { validateAction, calculateEffectiveCost, getEligibleNobles } from './validators.js';
 
 // =============================================================================
 // MAIN ACTION APPLICATION

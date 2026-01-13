@@ -15,8 +15,8 @@ import {
   GemColor,
   INITIAL_GEM_COUNTS,
   GAME_CONSTANTS,
-} from './types';
-import { getCardsByTier, getAllNobles } from './data';
+} from './types.js';
+import { getCardsByTier, getAllNobles } from './data/index.js';
 
 // =============================================================================
 // INITIALIZATION FUNCTIONS

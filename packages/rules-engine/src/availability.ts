@@ -12,8 +12,8 @@ import {
   DevelopmentCard,
   GEM_COLORS,
   GAME_CONSTANTS,
-} from './types';
-import { getPlayerById } from './initialization';
+} from './types.js';
+import { getPlayerById } from './initialization.js';
 import { 
   isPlayersTurn, 
   isGameInProgress, 
@@ -21,7 +21,7 @@ import {
   calculateEffectiveCost,
   getEligibleNobles,
   getTotalGems,
-} from './validators';
+} from './validators.js';
 
 // =============================================================================
 // AVAILABLE ACTIONS

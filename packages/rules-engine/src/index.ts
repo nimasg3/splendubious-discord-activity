@@ -48,7 +48,7 @@ export type {
   ValidationErrorCode,
   // Config types
   GameConfig,
-} from './types';
+} from './types.js';
 
 export {
   // Constants
@@ -56,7 +56,7 @@ export {
   GAME_CONSTANTS,
   GEM_COLORS,
   GEM_TYPES,
-} from './types';
+} from './types.js';
 
 // =============================================================================
 // INITIALIZATION EXPORTS
@@ -73,7 +73,7 @@ export {
   getPlayerById,
   generateGameId,
   shuffleArray,
-} from './initialization';
+} from './initialization.js';
 
 // =============================================================================
 // VALIDATION EXPORTS
@@ -94,7 +94,7 @@ export {
   getEligibleNobles,
   getTotalGems,
   needsToDiscardGems,
-} from './validators';
+} from './validators.js';
 
 // =============================================================================
 // ACTION EXPORTS
@@ -115,7 +115,7 @@ export {
   checkGameEnd,
   determineWinners,
   calculatePayment,
-} from './actions';
+} from './actions.js';
 
 // =============================================================================
 // AVAILABILITY EXPORTS
@@ -126,7 +126,7 @@ export type {
   TakeGemsOptions,
   ReservableCards,
   PurchasableCards,
-} from './availability';
+} from './availability.js';
 
 export {
   getAvailableActions,
@@ -138,7 +138,7 @@ export {
   getMarketCards,
   getMarketCardsByTier,
   hasDeckCards,
-} from './availability';
+} from './availability.js';
 
 // =============================================================================
 // DATA EXPORTS
@@ -154,4 +154,4 @@ export {
   getAllNobles,
   findCardById,
   findNobleById,
-} from './data';
+} from './data/index.js';

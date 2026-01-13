@@ -14,4 +14,4 @@ export {
   getAllNobles,
   findCardById,
   findNobleById,
-} from './cards';
+} from './cards.js';

@@ -5,7 +5,7 @@
  * Card data is based on the original Splendor board game.
  */
 
-import { DevelopmentCard, Noble, ColoredGemCollection } from '../types';
+import { DevelopmentCard, Noble, ColoredGemCollection } from '../types.js';
 
 // =============================================================================
 // HELPER FUNCTIONS

@@ -19,8 +19,8 @@ import {
   DevelopmentCard,
   GAME_CONSTANTS,
   GEM_COLORS,
-} from './types';
-import { getCurrentPlayer, getPlayerById } from './initialization';
+} from './types.js';
+import { getCurrentPlayer, getPlayerById } from './initialization.js';
 
 // =============================================================================
 // MAIN VALIDATION FUNCTION
