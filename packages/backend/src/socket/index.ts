@@ -2,4 +2,4 @@
  * Socket Module
  */
 
-export { setupSocketHandlers, broadcastRoomUpdate, broadcastGameStarted, broadcastGameState, sendGameStateToPlayer } from './handlers';
+export { setupSocketHandlers, broadcastRoomUpdate, broadcastGameStarted, broadcastGameState, sendGameStateToPlayer } from './handlers.js';

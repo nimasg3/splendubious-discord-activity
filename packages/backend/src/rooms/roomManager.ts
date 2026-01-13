@@ -11,7 +11,7 @@ import {
   RoomStateDTO,
   PlayerDTO,
   ConnectionStatus,
-} from '../types';
+} from '../types.js';
 
 // =============================================================================
 // ROOM STORE

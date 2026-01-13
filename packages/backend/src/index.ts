@@ -13,9 +13,9 @@ import {
   ServerToClientEvents,
   InterServerEvents,
   SocketData,
-} from './types';
-import { setupSocketHandlers } from './socket';
-import { cleanupInactiveRooms } from './rooms';
+} from './types.js';
+import { setupSocketHandlers } from './socket/index.js';
+import { cleanupInactiveRooms } from './rooms/index.js';
 
 // =============================================================================
 // CONFIGURATION

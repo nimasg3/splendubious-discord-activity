@@ -13,4 +13,4 @@ export {
   getGameState,
   isGameInProgress,
   getPlayerAvailableActions,
-} from './gameController';
+} from './gameController.js';

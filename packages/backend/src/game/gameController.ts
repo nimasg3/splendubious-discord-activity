@@ -13,8 +13,8 @@ import {
   applyAction,
   getAvailableActions,
 } from '@splendubious/rules-engine';
-import { ClientGameState, ClientPlayerState } from '../types';
-import { getRoom, setGameState, updateRoomStatus } from '../rooms';
+import { ClientGameState, ClientPlayerState } from '../types.js';
+import { getRoom, setGameState, updateRoomStatus } from '../rooms/index.js';
 
 // =============================================================================
 // GAME LIFECYCLE

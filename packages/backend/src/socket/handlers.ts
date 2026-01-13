@@ -10,7 +10,7 @@ import {
   ServerToClientEvents,
   InterServerEvents,
   SocketData,
-} from '../types';
+} from '../types.js';
 import {
   createRoom,
   joinRoom,
@@ -19,13 +19,13 @@ import {
   updatePlayerStatus,
   updatePlayerName,
   toRoomDTO,
-} from '../rooms';
+} from '../rooms/index.js';
 import {
   startGame,
   processAction,
   toClientGameState,
   getGameState,
-} from '../game';
+} from '../game/index.js';
 
 type GameSocket = Socket<
   ClientToServerEvents,

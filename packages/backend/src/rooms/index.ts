@@ -19,4 +19,4 @@ export {
   toRoomDTO,
   toPlayerDTO,
   cleanupInactiveRooms,
-} from './roomManager';
+} from './roomManager.js';
