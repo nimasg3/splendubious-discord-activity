@@ -34,17 +34,11 @@ RUN npm run build --workspace=@splendubious/backend
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy package files
+# Copy everything needed from builder
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/packages/rules-engine/package.json ./packages/rules-engine/
-COPY --from=builder /app/packages/backend/package.json ./packages/backend/
-
-# Copy built artifacts
-COPY --from=builder /app/packages/rules-engine/dist ./packages/rules-engine/dist
-COPY --from=builder /app/packages/backend/dist ./packages/backend/dist
-
-# Install production dependencies only
-RUN npm ci --omit=dev
+COPY --from=builder /app/packages/rules-engine ./packages/rules-engine
+COPY --from=builder /app/packages/backend ./packages/backend
+COPY --from=builder /app/node_modules ./node_modules
 
 # Expose the backend port
 EXPOSE 3001
