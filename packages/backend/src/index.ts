@@ -25,6 +25,8 @@ const PORT = process.env.PORT ?? 3001;
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
 const CLEANUP_INTERVAL = 60000; // 1 minute
 
+console.log('Starting server with config:', { PORT, CORS_ORIGIN });
+
 // =============================================================================
 // SERVER SETUP
 // =============================================================================
@@ -32,10 +34,14 @@ const CLEANUP_INTERVAL = 60000; // 1 minute
 const app = express();
 const httpServer = createServer(app);
 
-// Parse CORS origins (comma-separated for multiple origins, or * for all)
-const CORS_ORIGINS = CORS_ORIGIN === '*' 
-  ? true 
-  : CORS_ORIGIN.split(',').map(s => s.trim());
+// CORS configuration - allow all origins if * is set
+const corsOptions = {
+  origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN,
+  methods: ['GET', 'POST'],
+  credentials: true,
+};
+
+console.log('CORS options:', corsOptions);
 
 // Configure Socket.IO
 const io = new Server<
@@ -44,18 +50,16 @@ const io = new Server<
   InterServerEvents,
   SocketData
 >(httpServer, {
-  cors: {
-    origin: CORS_ORIGINS,
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
+  cors: corsOptions,
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
 });
 
 // =============================================================================
 // MIDDLEWARE
 // =============================================================================
 
-app.use(cors({ origin: CORS_ORIGINS, credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // =============================================================================
@@ -66,7 +70,7 @@ app.use(express.json());
  * Health check endpoint
  */
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+  res.json({ status: 'ok', timestamp: Date.now(), cors: CORS_ORIGIN });
 });
 
 /**
@@ -77,9 +81,11 @@ app.get('/info', (_req, res) => {
   res.json({
     version: '1.0.0',
     uptime: process.uptime(),
+    cors: CORS_ORIGIN,
     // activeRooms: getAllRooms().length,
     // activePlayers: ...
   });
+});
 });
 
 // =============================================================================
