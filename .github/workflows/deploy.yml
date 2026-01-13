@@ -93,6 +93,7 @@ jobs:
           echo "✅ Frontend deployed to S3"
       
       - name: Invalidate CloudFront cache
+        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID != '' }}
         run: |
           echo "Invalidating CloudFront cache..."
           aws cloudfront create-invalidation \
