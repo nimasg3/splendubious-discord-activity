@@ -32,6 +32,11 @@ const CLEANUP_INTERVAL = 60000; // 1 minute
 const app = express();
 const httpServer = createServer(app);
 
+// Parse CORS origins (comma-separated for multiple origins, or * for all)
+const CORS_ORIGINS = CORS_ORIGIN === '*' 
+  ? true 
+  : CORS_ORIGIN.split(',').map(s => s.trim());
+
 // Configure Socket.IO
 const io = new Server<
   ClientToServerEvents,
@@ -40,8 +45,9 @@ const io = new Server<
   SocketData
 >(httpServer, {
   cors: {
-    origin: CORS_ORIGIN,
+    origin: CORS_ORIGINS,
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
@@ -49,7 +55,7 @@ const io = new Server<
 // MIDDLEWARE
 // =============================================================================
 
-app.use(cors({ origin: CORS_ORIGIN }));
+app.use(cors({ origin: CORS_ORIGINS, credentials: true }));
 app.use(express.json());
 
 // =============================================================================
