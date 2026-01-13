@@ -38,7 +38,7 @@ export function GameScreen(): JSX.Element {
   const playerCount = gameState.players.length;
 
   // Local player at bottom, opponents ordered by turn order starting from the player after local
-  const localPlayer = gameState.players[localPlayerIndex];
+  const localPlayer = localPlayerIndex >= 0 ? gameState.players[localPlayerIndex] : undefined;
   const opponentsInTurnOrder: typeof gameState.players = [];
   for (let i = 1; i < playerCount; i++) {
     const nextIndex = (localPlayerIndex + i) % playerCount;
