@@ -1047,6 +1047,11 @@ button {
   font-weight: bold;
   color: var(--gem-gold);
   margin-right: auto;
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .purchased-card .card-bonus {
@@ -1146,6 +1151,11 @@ button {
   font-weight: bold;
   color: var(--gem-gold);
   margin-right: auto;
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .reserved-card .card-bonus {
@@ -1171,7 +1181,11 @@ button {
   font-size: 0.65rem;
   font-weight: bold;
   color: white;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .player-reserved-count {
@@ -1285,6 +1299,12 @@ button {
   transition: var(--transition-fast);
   font-weight: bold;
   cursor: pointer;
+  color: white;
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .gem-token.size-small {
@@ -1321,11 +1341,11 @@ button {
 }
 
 .gem-emerald { background-color: var(--gem-emerald); color: white; }
-.gem-diamond { background-color: var(--gem-diamond); color: #333; }
+.gem-diamond { background-color: var(--gem-diamond); color: white; }
 .gem-sapphire { background-color: var(--gem-sapphire); color: white; }
 .gem-onyx { background-color: var(--gem-onyx); color: white; }
 .gem-ruby { background-color: var(--gem-ruby); color: white; }
-.gem-gold { background-color: var(--gem-gold); color: #333; }
+.gem-gold { background-color: var(--gem-gold); color: white; }
 
 /* =============================================================================
    DEVELOPMENT CARDS
@@ -1402,6 +1422,11 @@ button {
   font-size: 1.4rem;
   font-weight: bold;
   color: var(--gem-gold);
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .card-bonus {
@@ -1431,7 +1456,11 @@ button {
   font-size: 0.75rem;
   font-weight: bold;
   color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 /* Deck Card */
@@ -1526,6 +1555,11 @@ button {
   font-weight: bold;
   color: var(--gem-gold);
   margin-bottom: var(--spacing-xs);
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 .noble-requirements {
@@ -1549,7 +1583,11 @@ button {
 
 .requirement-value {
   color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
 
 /* =============================================================================

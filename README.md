@@ -1,250 +1,123 @@
-Splendor — Game Rules Specification (Engine-Level)
-1. Game Overview
+# Splendubious
 
-Splendor is a turn-based, multiplayer resource-management game for 2–4 players.
-Players collect gem tokens, purchase development cards, attract nobles, and score prestige points.
-The game ends when a player reaches 15 or more prestige points, after the round completes.
+A Discord Activity implementation of the classic board game Splendor. Play with 2-4 players directly within Discord!
 
-2. Core Entities
-2.1 Player
-Player State
+## 📋 Prerequisites
 
-Each player has:
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- npm (comes with Node.js)
 
-id — unique identifier
+## 🚀 Getting Started
 
-gems — count of held gem tokens
+### 1. Clone the repository
 
-bonuses — permanent gem discounts from purchased cards
+```bash
+git clone https://github.com/nimasg3/splendubious-discord-activity.git
+cd splendubious-discord-activity
+```
 
-reservedCards — up to 3 reserved development cards
+### 2. Install dependencies
 
-purchasedCards — all acquired development cards
+```bash
+npm install
+```
 
-nobles — nobles acquired
+This will install dependencies for all packages (rules-engine, backend, and frontend).
 
-prestigePoints — total score
+### 3. Start the development servers
 
-Gem Limits
+Run both backend and frontend simultaneously:
 
-A player may hold at most 10 gem tokens.
+```bash
+npm run dev
+```
 
-Excess gems must be discarded immediately after an action that exceeds the limit.
+Or run them separately:
 
-2.2 Gem Pool (Token Supply)
-Gem Types
+```bash
+# Terminal 1 - Backend (runs on http://localhost:3001)
+npm run dev:backend
 
-Emerald (green)
+# Terminal 2 - Frontend (runs on http://localhost:5173)
+npm run dev:frontend
+```
 
-Diamond (white)
+### 4. Open the app
 
-Sapphire (blue)
+Navigate to [http://localhost:5173](http://localhost:5173) in your browser.
 
-Onyx (black)
+## 📦 Project Structure
 
-Ruby (red)
+```
+splendubious-discord-activity/
+├── packages/
+│   ├── rules-engine/    # Game logic and validation
+│   ├── backend/         # Express + Socket.IO server
+│   └── frontend/        # React + Vite client
+├── package.json         # Root workspace configuration
+└── RULES.md            # Game rules documentation
+```
 
-Gold (wild / joker)
+## 🛠️ Available Scripts
 
-Initial Token Counts
-Players	Each Colored Gem	Gold
-2	    4	                5
-3	    5	                5
-4	    7	                5
-2.3 Development Cards
-Card Structure
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start both frontend and backend in development mode |
+| `npm run dev:frontend` | Start only the frontend dev server |
+| `npm run dev:backend` | Start only the backend dev server |
+| `npm run build` | Build all packages for production |
+| `npm run test` | Run tests across all packages |
 
-Each development card has:
+## 🧪 Running Tests
 
-tier — I, II, or III
+```bash
+# Run all tests
+npm run test
 
-cost — required gems to purchase
+# Run tests for a specific package
+npm run test --workspace=@splendubious/rules-engine
+npm run test --workspace=@splendubious/backend
+```
 
-bonus — permanent gem discount (one color)
+## 🎮 Game Rules
 
-prestigePoints — 0–5
+See [RULES.md](./RULES.md) for complete game rules and mechanics.
 
-Market Layout
+## 🏗️ Building for Production
 
-Each tier has a deck.
+```bash
+npm run build
+```
 
-4 face-up cards per tier are available at all times (if deck allows).
+This builds:
+- `rules-engine` → TypeScript compiled to `dist/`
+- `backend` → TypeScript compiled to `dist/`
+- `frontend` → Vite build to `dist/`
 
-When a card is removed, immediately replace it from the same tier deck.
+## 🌐 Deployment
 
-2.4 Nobles
-Noble Structure
+The application is deployed on AWS:
+- **Frontend**: S3 + CloudFront (CDN)
+- **Backend**: App Runner (containerized)
 
-Each noble has:
+Pushing to `main` triggers automatic deployment via GitHub Actions.
 
-requirements — minimum permanent bonuses needed
+## 📝 Environment Variables
 
-prestigePoints — always 3
+### Frontend (`.env` in `packages/frontend/`)
 
-Noble Rules
+```env
+VITE_SOCKET_URL=http://localhost:3001
+VITE_DISCORD_CLIENT_ID=your_discord_client_id
+```
 
-Nobles cannot be purchased.
+### Backend (`.env` in `packages/backend/`)
 
-A player receives at most one noble per turn.
+```env
+PORT=3001
+CORS_ORIGIN=http://localhost:5173
+```
 
-If multiple nobles are eligible, the player chooses.
+## 📄 License
 
-2.5 Bank
-
-The bank holds:
-
-All unclaimed gem tokens
-
-All undealt development cards
-
-All nobles not yet claimed
-
-The bank validates all token availability and card replacements.
-
-2.6 Turn Order
-
-Players are ordered randomly at game start.
-
-Turns proceed clockwise.
-
-Each turn consists of exactly one main action, followed by:
-
-Noble check
-
-Gem limit enforcement
-
-Game end is checked after each full round.
-
-3. Player Actions
-
-Only one of the following actions may be taken per turn.
-
-3.1 Take 3 Different Gems
-Rules
-
-Take exactly 3 gems of different colors
-
-Colors must be among the 5 non-gold gem types
-
-Each chosen gem must be available in the bank
-
-Constraints
-
-Gold gems cannot be taken via this action
-
-Action invalid if fewer than 3 distinct colors are available
-
-3.2 Take 2 Same Gems
-Rules
-
-Take 2 gems of the same color
-
-Constraints
-
-The bank must have at least 4 gems of that color before the action
-
-Gold gems cannot be taken this way
-
-3.3 Reserve a Card
-Rules
-
-Reserve one development card:
-
-Either face-up from the market
-
-Or top card from a tier deck (blind)
-
-Receive 1 gold gem, if available
-
-Constraints
-
-Player may hold maximum 3 reserved cards
-
-If no gold gems remain, reservation is still allowed (without gold)
-
-3.4 Purchase a Card
-Rules
-
-Purchase a card from:
-
-The market
-
-The player’s reserved cards
-
-Cost is reduced by player’s permanent bonuses
-
-Gold gems may substitute for any missing color
-
-Effects
-
-Remove gems from player → return to bank
-
-Add card to purchasedCards
-
-Apply card bonus permanently
-
-Add prestige points
-
-3.5 Receive a Noble (Automatic)
-Rules
-
-At the end of the player’s turn:
-
-If player meets requirements for one or more nobles
-
-Player chooses one noble
-
-Noble is removed from the game and added to the player
-
-4. Validation Rules (Critical)
-
-An action is invalid if:
-
-It violates token availability
-
-It exceeds gem limits without resolving discards
-
-It attempts to bypass cost requirements
-
-It targets unavailable cards or nobles
-
-All validation must occur before state mutation.
-
-5. Gem Discard Rule
-
-If a player exceeds 10 total gems after their action:
-
-Player must immediately discard gems of their choice
-
-Discarded gems return to the bank
-
-No further game progress until resolved
-
-6. Win Condition
-Trigger
-
-When a player reaches 15 or more prestige points
-
-Resolution
-
-The current round continues until all players have taken the same number of turns
-
-The player with:
-
-Highest prestige points wins
-
-If tied: fewest purchased cards
-
-If still tied: shared victory
-
-7. Game Initialization
-
-Shuffle development decks by tier
-
-Reveal 4 cards per tier
-
-Randomize turn order
-
-Deal nobles based on player count:
-
-Players + 1 nobles
+This project is for educational purposes. Splendor is a trademark of Space Cowboys / Asmodee.
