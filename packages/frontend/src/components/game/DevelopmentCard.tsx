@@ -75,7 +75,11 @@ export function DeckCard({ tier, count, onClick, canReserve = false }: DeckCardP
       role={canReserve ? 'button' : undefined}
       tabIndex={canReserve ? 0 : undefined}
     >
-      <span className="deck-tier">{['I', 'II', 'III'][tier - 1]}</span>
+      <img 
+        src={`/cards/tier${tier}-back.png`} 
+        alt={`Tier ${tier} deck`}
+        className="deck-card-image"
+      />
       <span className="deck-count">{count}</span>
     </div>
   );

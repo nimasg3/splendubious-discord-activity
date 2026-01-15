@@ -10,6 +10,7 @@ import { ClientGameState, CardDisplay } from '../../types';
 import { DevelopmentCard, DeckCard } from './DevelopmentCard';
 import { GemToken } from './GemToken';
 import { NobleTile } from './NobleTile';
+import { ActionPanel } from './ActionPanel';
 import { useGame } from '../../context';
 
 const GEM_COLORS: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
@@ -237,6 +238,11 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
             isEligible={isNobleEligible(noble.id)}
           />
         ))}
+      </div>
+
+      {/* Action Panel - Bottom Right */}
+      <div className="action-panel-area">
+        <ActionPanel />
       </div>
     </div>
   );

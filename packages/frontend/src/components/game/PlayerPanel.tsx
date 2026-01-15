@@ -97,6 +97,9 @@ export function PlayerPanel({
     return acc;
   }, {} as Record<GemColor, typeof player.purchasedCards>);
 
+  // Calculate total gems for local player display
+  const totalGems = Object.values(player.gems).reduce((sum, count) => sum + count, 0);
+
   return (
     <div 
       className={`player-panel ${isCurrentPlayer ? 'current-turn' : ''} ${isLocalPlayer ? 'local-player' : ''} position-${position}`}
@@ -106,6 +109,11 @@ export function PlayerPanel({
         <div className="player-name">
           {player.name}
           {isLocalPlayer && <span className="you-indicator"> (You)</span>}
+          {isLocalPlayer && (
+            <span className={`gem-count-badge ${totalGems >= 10 ? 'at-limit' : totalGems >= 8 ? 'warning' : ''}`}>
+              💎 {totalGems}/10
+            </span>
+          )}
         </div>
         <div className="player-prestige">
           <span className="prestige-value">{player.prestigePoints}</span>

@@ -5,7 +5,7 @@
  */
 
 import { useGame } from '../../context';
-import { GameBoard, PlayerPanel, ActionPanel } from '../game';
+import { GameBoard, PlayerPanel } from '../game';
 
 export function GameScreen(): JSX.Element {
   const { state, isMyTurn, clearSelection, leaveRoom } = useGame();
@@ -115,10 +115,6 @@ export function GameScreen(): JSX.Element {
       <div className="game-area">
         <div className="game-board-wrapper">
           <GameBoard gameState={gameState} />
-          {/* Action panel - anchored under game board */}
-          <div className="action-panel-container">
-            <ActionPanel />
-          </div>
         </div>
       </div>
 

@@ -19,18 +19,11 @@ export function ActionPanel(): JSX.Element {
     discardGems,
     deselectGem,
     isMyTurn,
-    getMyPlayer,
   } = useGame();
 
   const { selectedAction, gameState } = state;
-  const myPlayer = getMyPlayer();
   const availableActions = gameState?.availableActions;
   const isCurrentTurn = isMyTurn();
-
-  // Calculate total gems player has
-  const totalPlayerGems = myPlayer 
-    ? Object.values(myPlayer.gems).reduce((sum, count) => sum + count, 0)
-    : 0;
 
   // Check if player must discard gems (over 10 limit)
   const mustDiscardGems = availableActions?.mustDiscardGems === true;
@@ -140,39 +133,26 @@ export function ActionPanel(): JSX.Element {
         );
 
       case 'take_gems':
-        const gemCount = selectedAction.gems.length;
-        if (gemCount === 0) {
-          return (
-            <div className="selection-status selecting">
-              <span>Select gems from the bank (1-3 different, or 2 same)</span>
-            </div>
-          );
-        }
-        if (gemCount === 1) {
-          return (
-            <div className="selection-status ready">
-              <span>Ready to take 1 gem (or select more)</span>
-            </div>
-          );
-        }
-        if (gemCount === 2) {
-          const isSame = selectedAction.gems[0] === selectedAction.gems[1];
-          if (isSame) {
-            return (
-              <div className="selection-status ready">
-                <span>Ready to take 2 {selectedAction.gems[0]} gems</span>
-              </div>
-            );
-          }
-          return (
-            <div className="selection-status ready">
-              <span>Ready to take 2 gems (or select 1 more)</span>
-            </div>
-          );
-        }
         return (
-          <div className="selection-status ready">
-            <span>Ready to take 3 different gems</span>
+          <div className="selection-status selecting">
+            <span className="status-text">Taking gems:</span>
+            <div className="selected-gems-inline">
+              {selectedAction.gems.length === 0 ? (
+                <span className="hint-text">Select 1-3 different or 2 same</span>
+              ) : (
+                selectedAction.gems.map((gem, index) => (
+                  <button
+                    key={`${gem}-${index}`}
+                    className="selected-gem-inline"
+                    onClick={() => deselectGem(gem)}
+                    aria-label={`Remove ${gem}`}
+                  >
+                    <GemToken color={gem} count={1} size="small" />
+                    <span className="remove-icon">×</span>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         );
 
@@ -210,36 +190,10 @@ export function ActionPanel(): JSX.Element {
     }
   };
 
-  // Render selected gems preview
-  const renderSelectedGems = () => {
-    if (selectedAction.type !== 'take_gems' || selectedAction.gems.length === 0) {
-      return null;
-    }
-
-    return (
-      <div className="selected-gems-preview">
-        {selectedAction.gems.map((gem, index) => (
-          <button
-            key={`${gem}-${index}`}
-            className="selected-gem"
-            onClick={() => deselectGem(gem)}
-            aria-label={`Remove ${gem}`}
-          >
-            <GemToken color={gem} count={1} size="small" />
-            <span className="remove-icon">×</span>
-          </button>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="action-panel">
-      {/* Selection status */}
+      {/* Selection status with inline gems */}
       {renderSelectionStatus()}
-
-      {/* Selected gems preview */}
-      {renderSelectedGems()}
 
       {/* Action buttons */}
       <div className="action-buttons">
@@ -261,18 +215,6 @@ export function ActionPanel(): JSX.Element {
           </>
         )}
       </div>
-
-      {/* Player gem count indicator */}
-      {myPlayer && (
-        <div className="gem-count-indicator">
-          <span>Gems: {totalPlayerGems}/10</span>
-          {totalPlayerGems >= 8 && (
-            <span className="warning">
-              {totalPlayerGems >= 10 ? ' (at limit!)' : ' (approaching limit)'}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
