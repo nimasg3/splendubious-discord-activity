@@ -207,7 +207,7 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
           {ALL_GEMS.map((gem) => {
             const isGold = gem === 'gold';
             return (
-              <div key={gem} className="gem-stack">
+              <div key={gem} className="gem-stack" data-gem-bank={gem}>
                 <GemToken
                   color={gem}
                   count={gameState.bank[gem] || 0}

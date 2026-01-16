@@ -318,6 +318,17 @@ export function onGameEnded(callback: (winners: string[]) => void): () => void {
 }
 
 /**
+ * Subscribes to action applied events (when any player takes an action)
+ */
+export function onActionApplied(
+  callback: (action: PlayerAction, state: ClientGameState) => void
+): () => void {
+  if (!socket) return () => {};
+  socket.on('game:action_applied', callback);
+  return () => socket?.off('game:action_applied', callback);
+}
+
+/**
  * Subscribes to server errors
  */
 export function onError(

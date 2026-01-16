@@ -238,7 +238,10 @@ function handleGameEvents(socket: GameSocket, io: GameServer): void {
     
     callback({ success: true });
     
-    // Broadcast action and state update to room
+    // Broadcast action applied to all players (for animations)
+    broadcastActionApplied(io, roomId, data.action);
+    
+    // Broadcast game state update to room
     broadcastGameState(io, roomId);
     
     // Check for game end
@@ -322,6 +325,22 @@ export function broadcastGameState(io: GameServer, roomId: string): void {
     if (player.socketId && player.status === 'connected') {
       const clientState = toClientGameState(room.gameState, player.id);
       io.to(player.socketId).emit('game:state_updated', clientState);
+    }
+  }
+}
+
+/**
+ * Broadcasts action applied event to all players (for animations)
+ */
+export function broadcastActionApplied(io: GameServer, roomId: string, action: import('@splendubious/rules-engine').PlayerAction): void {
+  const room = getRoom(roomId);
+  if (!room?.gameState) return;
+  
+  // For each connected player, send action applied with personalized state
+  for (const player of room.players) {
+    if (player.socketId && player.status === 'connected') {
+      const clientState = toClientGameState(room.gameState, player.id);
+      io.to(player.socketId).emit('game:action_applied', action, clientState);
     }
   }
 }

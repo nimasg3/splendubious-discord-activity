@@ -103,6 +103,7 @@ export function PlayerPanel({
   return (
     <div 
       className={`player-panel ${isCurrentPlayer ? 'current-turn' : ''} ${isLocalPlayer ? 'local-player' : ''} position-${position}`}
+      data-player-panel={player.id}
     >
       {/* Player header */}
       <div className="player-header">
@@ -145,6 +146,7 @@ export function PlayerPanel({
                 onClick={() => handleGemClick(color)}
                 onContextMenu={(e) => handleGemRightClick(e, color)}
                 title={isDiscardMode && gemCount > 0 ? `Click to select for discard${selectedForDiscard > 0 ? ', right-click to deselect' : ''}` : undefined}
+                data-player-gem={`${player.id}-${color}`}
               >
                 {gemCount > 0 ? (
                   <>

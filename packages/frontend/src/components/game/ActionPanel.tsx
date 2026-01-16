@@ -4,8 +4,8 @@
  * UI for selecting and confirming player actions.
  */
 
-import { useGame } from '../../context';
-import { GemToken } from './GemToken';
+import { useGame } from '../../context/index.js';
+import { GemToken } from './GemToken.js';
 
 export function ActionPanel(): JSX.Element {
   const { 
@@ -17,7 +17,6 @@ export function ActionPanel(): JSX.Element {
     purchaseCard,
     selectNoble,
     discardGems,
-    deselectGem,
     isMyTurn,
   } = useGame();
 
@@ -36,6 +35,7 @@ export function ActionPanel(): JSX.Element {
     try {
       switch (selectedAction.type) {
         case 'take_gems':
+          // Animation is triggered by server event (game:action_applied)
           // Check if taking 2 of the same gem
           if (selectedAction.gems.length === 2 && selectedAction.gems[0] === selectedAction.gems[1]) {
             const gem = selectedAction.gems[0];
@@ -133,6 +133,12 @@ export function ActionPanel(): JSX.Element {
         );
 
       case 'take_gems':
+        // Group gems by color for display
+        const gemCounts = selectedAction.gems.reduce((acc, gem) => {
+          acc[gem] = (acc[gem] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
         return (
           <div className="selection-status selecting">
             <span className="status-text">Taking gems:</span>
@@ -140,16 +146,13 @@ export function ActionPanel(): JSX.Element {
               {selectedAction.gems.length === 0 ? (
                 <span className="hint-text">Select 1-3 different or 2 same</span>
               ) : (
-                selectedAction.gems.map((gem, index) => (
-                  <button
-                    key={`${gem}-${index}`}
+                Object.entries(gemCounts).map(([gem, count]) => (
+                  <div
+                    key={gem}
                     className="selected-gem-inline"
-                    onClick={() => deselectGem(gem)}
-                    aria-label={`Remove ${gem}`}
                   >
-                    <GemToken color={gem} count={1} size="small" />
-                    <span className="remove-icon">×</span>
-                  </button>
+                    <GemToken color={gem as any} count={count} size="small" />
+                  </div>
                 ))
               )}
             </div>

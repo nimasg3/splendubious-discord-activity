@@ -13,7 +13,8 @@ import {
   AppScreen,
   DiscordUser,
 } from '../types';
-import * as socketClient from '../socket/client';
+import * as socketClient from '../socket/client.js';
+import { triggerGemAnimation } from './AnimationContext.js';
 
 // =============================================================================
 // STATE TYPES
@@ -269,6 +270,17 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
       // Game ended - state should already be updated
     });
     
+    // Subscribe to action applied events for animations
+    const unsubActionApplied = socketClient.onActionApplied((action, _state) => {
+      // Trigger gem animation when any player takes gems
+      if (action.type === 'TAKE_THREE_GEMS') {
+        triggerGemAnimation(action.gems, action.playerId);
+      } else if (action.type === 'TAKE_TWO_GEMS') {
+        // For taking 2 of the same gem, create an array with that gem twice
+        triggerGemAnimation([action.gem, action.gem], action.playerId);
+      }
+    });
+    
     const unsubError = socketClient.onError((error) => {
       dispatch({ type: 'SET_ERROR', error: error.message });
     });
@@ -296,6 +308,7 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
       unsubGameState();
       unsubGameStarted();
       unsubGameEnded();
+      unsubActionApplied();
       unsubError();
       socketClient.disconnect();
     };
