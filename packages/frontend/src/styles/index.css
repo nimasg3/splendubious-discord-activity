@@ -42,8 +42,8 @@
   --radius-round: 50%;
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
+  --transition-fast: 750ms ease;
+  --transition-normal: 850ms ease;
 }
 
 /* =============================================================================
@@ -1790,7 +1790,7 @@ button {
 .flying-gem {
   position: fixed;
   border-radius: 50%;
-  transition: all 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   box-shadow: 
     0 4px 8px rgba(0, 0, 0, 0.3),
     inset 0 2px 4px rgba(255, 255, 255, 0.3);
@@ -1819,4 +1819,228 @@ button {
 
 .flying-gem.gem-gold {
   background: radial-gradient(circle at 30% 30%, #f7dc6f, var(--gem-gold), #b7950b);
+}
+
+/* =============================================================================
+   FLYING CARDS ANIMATION
+   ============================================================================= */
+
+.flying-card {
+  position: fixed;
+  border-radius: var(--radius-md);
+  transition: left 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              top 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 950ms ease-out;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  pointer-events: none;
+  z-index: 1001;
+  transform-origin: center center;
+}
+
+.flying-card.bonus-emerald {
+  background-color: rgb(30, 60, 40);
+  border: 2px solid rgba(46, 204, 113, 0.6);
+}
+
+.flying-card.bonus-diamond {
+  background-color: rgb(60, 65, 70);
+  border: 2px solid rgba(236, 240, 241, 0.6);
+}
+
+.flying-card.bonus-sapphire {
+  background-color: rgb(25, 50, 75);
+  border: 2px solid rgba(52, 152, 219, 0.6);
+}
+
+.flying-card.bonus-onyx {
+  background-color: rgb(35, 40, 50);
+  border: 2px solid rgba(44, 62, 80, 0.6);
+}
+
+.flying-card.bonus-ruby {
+  background-color: rgb(70, 35, 35);
+  border: 2px solid rgba(231, 76, 60, 0.6);
+}
+
+.flying-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: auto;
+}
+
+.flying-card .card-prestige {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--gem-gold);
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+.flying-card .card-bonus {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.flying-card-cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: auto;
+}
+
+.flying-card .cost-pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+/* =============================================================================
+   DECK TO SLOT CARD ANIMATION (move + flip)
+   ============================================================================= */
+
+.deck-to-slot-card {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1002;
+  perspective: 1000px;
+  transition: left 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              top 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.deck-to-slot-card .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
+  transition: transform 600ms ease-in-out;
+  transform: rotateY(0deg);
+}
+
+.deck-to-slot-card .flip-card-front-wrapper {
+  perspective: 1000px;
+}
+
+.deck-to-slot-card .flip-card-front {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
+  transition: transform 600ms ease-in-out;
+  transform-origin: center center;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  border: 2px solid transparent;
+  /* No base background - let bonus classes set it */
+}
+
+/* Flip animation - when showing front */
+.deck-to-slot-card.phase-flipping .flip-card-back,
+.deck-to-slot-card.show-front .flip-card-back {
+  transform: rotateY(-180deg);
+}
+
+.deck-to-slot-card .flip-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: var(--radius-md);
+}
+
+/* Card front styling based on bonus color - matching development-card exactly */
+.deck-to-slot-card .flip-card-front.bonus-emerald {
+  background-color: rgba(46, 204, 113, 0.15);
+}
+
+.deck-to-slot-card .flip-card-front.bonus-diamond {
+  background-color: rgba(236, 240, 241, 0.2);
+}
+
+.deck-to-slot-card .flip-card-front.bonus-sapphire {
+  background-color: rgba(52, 152, 219, 0.15);
+}
+
+.deck-to-slot-card .flip-card-front.bonus-onyx {
+  background-color: rgba(44, 62, 80, 0.25);
+}
+
+.deck-to-slot-card .flip-card-front.bonus-ruby {
+  background-color: rgba(231, 76, 60, 0.15);
+}
+
+/* Card front content styling - matching development card styles exactly */
+.deck-to-slot-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: auto;
+}
+
+.deck-to-slot-card .card-prestige {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--gem-gold);
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+.deck-to-slot-card .card-bonus {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.deck-to-slot-card .card-costs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+}
+
+.deck-to-slot-card .card-cost {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-to-slot-card .cost-value {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
 }

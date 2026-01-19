@@ -13,6 +13,7 @@ interface DevelopmentCardProps {
   canReserve: boolean;
   isSelected: boolean;
   onClick: () => void;
+  slotIndex?: number; // Position in the market row (0-3)
 }
 
 const GEM_COLORS: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
@@ -23,6 +24,7 @@ export function DevelopmentCard({
   canReserve,
   isSelected,
   onClick,
+  slotIndex,
 }: DevelopmentCardProps): JSX.Element {
   const isInteractive = canPurchase || canReserve;
   
@@ -32,6 +34,9 @@ export function DevelopmentCard({
       onClick={isInteractive ? onClick : undefined}
       role={isInteractive ? 'button' : undefined}
       tabIndex={isInteractive ? 0 : undefined}
+      data-card-id={card.id}
+      data-tier={card.tier}
+      data-slot-index={slotIndex}
     >
       {/* Top row: Prestige points and bonus */}
       <div className="card-header">
@@ -67,7 +72,12 @@ interface DeckCardProps {
   canReserve?: boolean;
 }
 
-export function DeckCard({ tier, count, onClick, canReserve = false }: DeckCardProps): JSX.Element {
+export function DeckCard({ tier, count, onClick, canReserve = false }: DeckCardProps): JSX.Element | null {
+  // Don't render if deck is empty
+  if (count === 0) {
+    return null;
+  }
+  
   return (
     <div
       className={`deck-card tier-${tier} ${canReserve ? 'reservable' : ''}`}

@@ -14,7 +14,7 @@ import {
   DiscordUser,
 } from '../types';
 import * as socketClient from '../socket/client.js';
-import { triggerGemAnimation } from './AnimationContext.js';
+import { triggerGemAnimation, triggerCardAnimation, storeCardPositionForAnimation, getStoredSlotInfo, triggerSlotAnimationStart, triggerDeckToSlotAnimation } from './AnimationContext.js';
 
 // =============================================================================
 // STATE TYPES
@@ -271,13 +271,116 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     });
     
     // Subscribe to action applied events for animations
-    const unsubActionApplied = socketClient.onActionApplied((action, _state) => {
+    const unsubActionApplied = socketClient.onActionApplied((action, updatedState) => {
+      // Helper to get slot info from stored data or DOM
+      const getSlotInfoForCard = (cardId: string): { tier: 1 | 2 | 3; slotIndex: number } | null => {
+        // First try stored slot info (for local player's actions)
+        const storedInfo = getStoredSlotInfo(cardId);
+        if (storedInfo) return storedInfo;
+        
+        // Fallback: find the card in the DOM (for non-local player's actions)
+        const cardElement = document.querySelector(`[data-card-id="${cardId}"]`);
+        if (cardElement) {
+          const tier = cardElement.getAttribute('data-tier');
+          const slotIndex = cardElement.getAttribute('data-slot-index');
+          if (tier && slotIndex) {
+            return {
+              tier: parseInt(tier) as 1 | 2 | 3,
+              slotIndex: parseInt(slotIndex),
+            };
+          }
+        }
+        return null;
+      };
+
       // Trigger gem animation when any player takes gems
       if (action.type === 'TAKE_THREE_GEMS') {
         triggerGemAnimation(action.gems, action.playerId);
       } else if (action.type === 'TAKE_TWO_GEMS') {
         // For taking 2 of the same gem, create an array with that gem twice
         triggerGemAnimation([action.gem, action.gem], action.playerId);
+      } else if (action.type === 'PURCHASE_CARD') {
+        // Get the slot info from stored data or DOM
+        const slotInfo = getSlotInfoForCard(action.cardId);
+        
+        // Find the card info from the player's purchased cards in the updated state
+        const player = updatedState.players.find(p => p.id === action.playerId);
+        const card = player?.purchasedCards.find(c => c.id === action.cardId);
+        if (card) {
+          // Mark the slot as animating (will show as empty)
+          if (slotInfo) {
+            triggerSlotAnimationStart(slotInfo.tier, slotInfo.slotIndex, action.cardId);
+          }
+          
+          triggerCardAnimation(action.cardId, action.playerId, 'purchase', {
+            bonus: card.bonus,
+            tier: card.tier,
+            prestigePoints: card.prestigePoints,
+            cost: card.cost,
+          });
+          
+          // After flying card animation completes, trigger deck-to-slot animation
+          // Only animate if there are cards left in the deck
+          const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
+                          : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
+                          : updatedState.deckCounts.tier3;
+          if (slotInfo && deckCount > 0) {
+            setTimeout(() => {
+              // Find the new card that's now in this slot from the updated state
+              const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
+                               : slotInfo.tier === 2 ? updatedState.market.tier2 
+                               : updatedState.market.tier3;
+              const newCard = marketTier[slotInfo.slotIndex] || null;
+              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
+            }, 2000); // Wait for flying card animation to complete
+          } else if (slotInfo) {
+            // No cards in deck, just clear the animating slot after the flying card animation
+            setTimeout(() => {
+              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
+            }, 2000);
+          }
+        }
+      } else if (action.type === 'RESERVE_CARD' && action.cardId) {
+        // Get the slot info from stored data or DOM
+        const slotInfo = getSlotInfoForCard(action.cardId);
+        
+        // Find the card info from the player's reserved cards in the updated state
+        const player = updatedState.players.find(p => p.id === action.playerId);
+        const card = player?.reservedCards?.find(c => c.id === action.cardId);
+        if (card) {
+          // Mark the slot as animating (will show as empty)
+          if (slotInfo) {
+            triggerSlotAnimationStart(slotInfo.tier, slotInfo.slotIndex, action.cardId);
+          }
+          
+          triggerCardAnimation(action.cardId, action.playerId, 'reserve', {
+            bonus: card.bonus,
+            tier: card.tier,
+            prestigePoints: card.prestigePoints,
+            cost: card.cost,
+          });
+          
+          // After flying card animation completes, trigger deck-to-slot animation
+          // Only animate if there are cards left in the deck
+          const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
+                          : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
+                          : updatedState.deckCounts.tier3;
+          if (slotInfo && deckCount > 0) {
+            setTimeout(() => {
+              // Find the new card that's now in this slot from the updated state
+              const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
+                               : slotInfo.tier === 2 ? updatedState.market.tier2 
+                               : updatedState.market.tier3;
+              const newCard = marketTier[slotInfo.slotIndex] || null;
+              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
+            }, 2000); // Wait for flying card animation to complete
+          } else if (slotInfo) {
+            // No cards in deck, just clear the animating slot after the flying card animation
+            setTimeout(() => {
+              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
+            }, 2000);
+          }
+        }
       }
     });
     
@@ -431,6 +534,11 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
 
   const reserveCard = useCallback(async (cardId: string | null, tier: CardTier) => {
     try {
+      // Store card position BEFORE sending action (card will be removed from board after action)
+      if (cardId) {
+        storeCardPositionForAnimation(cardId);
+      }
+      
       const action: PlayerAction = {
         type: 'RESERVE_CARD',
         playerId: state.user!.id,
@@ -446,6 +554,9 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
 
   const purchaseCard = useCallback(async (cardId: string) => {
     try {
+      // Store card position BEFORE sending action (card will be removed from board after action)
+      storeCardPositionForAnimation(cardId);
+      
       const action: PlayerAction = {
         type: 'PURCHASE_CARD',
         playerId: state.user!.id,

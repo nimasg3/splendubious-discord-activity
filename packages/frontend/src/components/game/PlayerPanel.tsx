@@ -128,19 +128,16 @@ export function PlayerPanel({
       {/* Player resources - Gems and Cards aligned by color, with reserved cards on the right */}
       <div className="player-cards-section">
         <div className="player-cards-row">
-          {/* Purchased cards grid */}
+          {/* Purchased cards grid - always render all gem colors for animation targets */}
           <div className={`player-resources-grid ${isDiscardMode ? 'discard-mode' : ''}`}>
         {GEM_COLORS.map((color) => {
           const gemCount = player.gems[color] || 0;
           const cards = cardsByBonus[color];
-          const hasContent = gemCount > 0 || cards.length > 0;
           const selectedForDiscard = getSelectedDiscardCount(color);
-          
-          if (!hasContent) return null;
           
           return (
             <div key={color} className="color-column">
-              {/* Gem for this color */}
+              {/* Gem slot for this color - always rendered for animation targeting */}
               <div 
                 className={`column-gem ${isDiscardMode && gemCount > 0 ? 'clickable' : ''} ${selectedForDiscard > 0 ? 'selected-for-discard' : ''}`}
                 onClick={() => handleGemClick(color)}
@@ -160,8 +157,8 @@ export function PlayerPanel({
                 )}
               </div>
               
-              {/* Cards for this color */}
-              <div className="column-cards">
+              {/* Cards for this color - with data attribute for animation targeting */}
+              <div className="column-cards" data-player-cards={`${player.id}-${color}`}>
                 {cards.length > 0 && (
                   <div className="card-stack">
                     {cards.map((card, index) => (
@@ -194,21 +191,28 @@ export function PlayerPanel({
           );
         })}
         
-        {/* Gold gems in separate column */}
-        {(player.gems.gold || 0) > 0 && (() => {
+        {/* Gold gems slot - always rendered for animation targeting */}
+        {(() => {
           const goldCount = player.gems.gold || 0;
           const selectedGoldForDiscard = getSelectedDiscardCount('gold');
           return (
             <div className="color-column gold-column">
               <div 
-                className={`column-gem ${isDiscardMode ? 'clickable' : ''} ${selectedGoldForDiscard > 0 ? 'selected-for-discard' : ''}`}
+                className={`column-gem ${isDiscardMode && goldCount > 0 ? 'clickable' : ''} ${selectedGoldForDiscard > 0 ? 'selected-for-discard' : ''}`}
                 onClick={() => handleGemClick('gold')}
                 onContextMenu={(e) => handleGemRightClick(e, 'gold')}
-                title={isDiscardMode ? `Click to select for discard${selectedGoldForDiscard > 0 ? ', right-click to deselect' : ''}` : undefined}
+                title={isDiscardMode && goldCount > 0 ? `Click to select for discard${selectedGoldForDiscard > 0 ? ', right-click to deselect' : ''}` : undefined}
+                data-player-gem={`${player.id}-gold`}
               >
-                <GemToken color="gold" count={goldCount} size="small" />
-                {selectedGoldForDiscard > 0 && (
-                  <span className="discard-badge">-{selectedGoldForDiscard}</span>
+                {goldCount > 0 ? (
+                  <>
+                    <GemToken color="gold" count={goldCount} size="small" />
+                    {selectedGoldForDiscard > 0 && (
+                      <span className="discard-badge">-{selectedGoldForDiscard}</span>
+                    )}
+                  </>
+                ) : (
+                  <div className="gem-placeholder" />
                 )}
               </div>
               <div className="column-cards" />
@@ -219,7 +223,7 @@ export function PlayerPanel({
 
         {/* Reserved Cards - visible to all players, purchasable by local player */}
         {player.reservedCards && player.reservedCards.length > 0 && (
-          <div className="player-reserved">
+          <div className="player-reserved" data-player-reserved={player.id}>
             <div className="section-label">Reserved ({player.reservedCards.length}/3)</div>
             <div className="reserved-cards">
               {player.reservedCards.map((card) => {

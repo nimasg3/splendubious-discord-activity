@@ -15,3 +15,6 @@ export {
   NobleTile,
   GemToken,
 } from './game';
+
+// Layout components
+export { ScalingWrapper } from './ScalingWrapper';

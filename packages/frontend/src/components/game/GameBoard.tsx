@@ -11,7 +11,7 @@ import { DevelopmentCard, DeckCard } from './DevelopmentCard';
 import { GemToken } from './GemToken';
 import { NobleTile } from './NobleTile';
 import { ActionPanel } from './ActionPanel';
-import { useGame } from '../../context';
+import { useGame, useAnimation } from '../../context';
 
 const GEM_COLORS: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
 const ALL_GEMS: (GemColor | 'gold')[] = [...GEM_COLORS, 'gold'];
@@ -22,6 +22,7 @@ interface GameBoardProps {
 
 export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
   const { state, selectGem, selectCard } = useGame();
+  const { isSlotAnimating } = useAnimation();
   const { selectedAction } = state;
 
   // Check if a card is purchasable
@@ -135,8 +136,19 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
             onClick={() => handleDeckClick(3)}
             canReserve={canReserveFromDeck(3)}
           />
-          {gameState.market.tier3.map((card, index) => (
-            card ? (
+          {gameState.market.tier3.map((card, index) => {
+            const slotIsAnimating = isSlotAnimating(3, index);
+            // Show empty slot if card is null OR if slot is animating
+            if (!card || slotIsAnimating) {
+              return (
+                <div 
+                  key={card?.id || `empty-3-${index}`} 
+                  className="card-slot empty"
+                  data-card-slot={`3-${index}`}
+                />
+              );
+            }
+            return (
               <DevelopmentCard
                 key={card.id}
                 card={card}
@@ -144,11 +156,10 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
                 canPurchase={isCardPurchasable(card)}
                 canReserve={isCardReservable(card)}
                 isSelected={isCardSelected(card.id)}
+                slotIndex={index}
               />
-            ) : (
-              <div key={`empty-3-${index}`} className="card-slot empty" />
-            )
-          ))}
+            );
+          })}
         </div>
 
         {/* Tier 2 - Middle row */}
@@ -159,8 +170,19 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
             onClick={() => handleDeckClick(2)}
             canReserve={canReserveFromDeck(2)}
           />
-          {gameState.market.tier2.map((card, index) => (
-            card ? (
+          {gameState.market.tier2.map((card, index) => {
+            const slotIsAnimating = isSlotAnimating(2, index);
+            // Show empty slot if card is null OR if slot is animating
+            if (!card || slotIsAnimating) {
+              return (
+                <div 
+                  key={card?.id || `empty-2-${index}`} 
+                  className="card-slot empty"
+                  data-card-slot={`2-${index}`}
+                />
+              );
+            }
+            return (
               <DevelopmentCard
                 key={card.id}
                 card={card}
@@ -168,11 +190,10 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
                 canPurchase={isCardPurchasable(card)}
                 canReserve={isCardReservable(card)}
                 isSelected={isCardSelected(card.id)}
+                slotIndex={index}
               />
-            ) : (
-              <div key={`empty-2-${index}`} className="card-slot empty" />
-            )
-          ))}
+            );
+          })}
         </div>
 
         {/* Tier 1 - Bottom row */}
@@ -183,8 +204,19 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
             onClick={() => handleDeckClick(1)}
             canReserve={canReserveFromDeck(1)}
           />
-          {gameState.market.tier1.map((card, index) => (
-            card ? (
+          {gameState.market.tier1.map((card, index) => {
+            const slotIsAnimating = isSlotAnimating(1, index);
+            // Show empty slot if card is null OR if slot is animating
+            if (!card || slotIsAnimating) {
+              return (
+                <div 
+                  key={card?.id || `empty-1-${index}`} 
+                  className="card-slot empty"
+                  data-card-slot={`1-${index}`}
+                />
+              );
+            }
+            return (
               <DevelopmentCard
                 key={card.id}
                 card={card}
@@ -192,11 +224,10 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
                 canPurchase={isCardPurchasable(card)}
                 canReserve={isCardReservable(card)}
                 isSelected={isCardSelected(card.id)}
+                slotIndex={index}
               />
-            ) : (
-              <div key={`empty-1-${index}`} className="card-slot empty" />
-            )
-          ))}
+            );
+          })}
         </div>
       </div>
 
