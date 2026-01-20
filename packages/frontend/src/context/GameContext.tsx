@@ -321,10 +321,11 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
           
           // After flying card animation completes, trigger deck-to-slot animation
           // Only animate if there are cards left in the deck
-          const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
-                          : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
-                          : updatedState.deckCounts.tier3;
-          if (slotInfo && deckCount > 0) {
+          if (slotInfo) {
+            const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
+                            : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
+                            : updatedState.deckCounts.tier3;
+            if (deckCount > 0) {
             setTimeout(() => {
               // Find the new card that's now in this slot from the updated state
               const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
@@ -333,11 +334,12 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
               const newCard = marketTier[slotInfo.slotIndex] || null;
               triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
             }, 2000); // Wait for flying card animation to complete
-          } else if (slotInfo) {
-            // No cards in deck, just clear the animating slot after the flying card animation
-            setTimeout(() => {
-              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
-            }, 2000);
+            } else {
+              // No cards in deck, just clear the animating slot after the flying card animation
+              setTimeout(() => {
+                triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
+              }, 2000);
+            }
           }
         }
       } else if (action.type === 'RESERVE_CARD' && action.cardId) {
@@ -362,23 +364,25 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
           
           // After flying card animation completes, trigger deck-to-slot animation
           // Only animate if there are cards left in the deck
-          const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
-                          : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
-                          : updatedState.deckCounts.tier3;
-          if (slotInfo && deckCount > 0) {
-            setTimeout(() => {
-              // Find the new card that's now in this slot from the updated state
-              const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
-                               : slotInfo.tier === 2 ? updatedState.market.tier2 
-                               : updatedState.market.tier3;
-              const newCard = marketTier[slotInfo.slotIndex] || null;
-              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
-            }, 2000); // Wait for flying card animation to complete
-          } else if (slotInfo) {
-            // No cards in deck, just clear the animating slot after the flying card animation
-            setTimeout(() => {
-              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
-            }, 2000);
+          if (slotInfo) {
+            const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
+                            : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
+                            : updatedState.deckCounts.tier3;
+            if (deckCount > 0) {
+              setTimeout(() => {
+                // Find the new card that's now in this slot from the updated state
+                const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
+                                 : slotInfo.tier === 2 ? updatedState.market.tier2 
+                                 : updatedState.market.tier3;
+                const newCard = marketTier[slotInfo.slotIndex] || null;
+                triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
+              }, 2000); // Wait for flying card animation to complete
+            } else {
+              // No cards in deck, just clear the animating slot after the flying card animation
+              setTimeout(() => {
+                triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
+              }, 2000);
+            }
           }
         }
       }
