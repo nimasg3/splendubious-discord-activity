@@ -29,7 +29,7 @@ export function LobbyScreen(): JSX.Element {
   const handleStartGame = async () => {
     setIsStarting(true);
     try {
-      await startGame(activePlayers);
+      await startGame(activePlayers as 2 | 3 | 4);
     } catch (error) {
       console.error('Failed to start game:', error);
     } finally {

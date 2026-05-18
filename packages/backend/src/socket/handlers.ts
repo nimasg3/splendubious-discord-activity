@@ -112,6 +112,7 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
       socket.to(data.roomId).emit('room:player_joined', {
         id: player.id,
         name: player.name,
+        color: player.color,
         status: player.status,
         isSpectator: player.isSpectator,
       });

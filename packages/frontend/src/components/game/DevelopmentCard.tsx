@@ -146,6 +146,7 @@ export function DeckCard({ tier, count, onClick, canReserve = false }: DeckCardP
   const [showCard, setShowCard] = useState(count > 0);
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
     if (count > 0) {
       setShowCard(true);
       prevCountRef.current = count;
@@ -153,11 +154,12 @@ export function DeckCard({ tier, count, onClick, canReserve = false }: DeckCardP
       // Last card just drawn — hold the image briefly
       const t = setTimeout(() => setShowCard(false), 2000);
       prevCountRef.current = 0;
-      return () => clearTimeout(t);
+      cleanup = () => clearTimeout(t);
     } else {
       setShowCard(false);
       prevCountRef.current = 0;
     }
+    return cleanup;
   }, [count]);
 
   // Show empty placeholder if deck is empty to preserve grid layout

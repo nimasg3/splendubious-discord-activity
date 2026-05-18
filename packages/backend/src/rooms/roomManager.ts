@@ -28,7 +28,7 @@ const DEFAULT_COLORS = ['#c0392b', '#2471a3', '#1e8449', '#d4ac0d', '#7d3c98', '
  */
 function pickDefaultColor(room: GameRoom): string {
   const taken = new Set(room.players.map(p => p.color));
-  return DEFAULT_COLORS.find(c => !taken.has(c)) ?? DEFAULT_COLORS[0];
+  return DEFAULT_COLORS.find(c => !taken.has(c)) ?? DEFAULT_COLORS[0]!;
 }
 
 // =============================================================================
@@ -53,7 +53,7 @@ export function createRoom(
   const host: RoomPlayer = {
     id: hostId,
     name: hostName,
-    color: DEFAULT_COLORS[0],
+    color: DEFAULT_COLORS[0]!,
     socketId: hostSocketId,
     status: 'connected',
     isSpectator: false,

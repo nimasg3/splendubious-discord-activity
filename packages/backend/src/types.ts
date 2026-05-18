@@ -176,7 +176,7 @@ export interface ClientGameState {
   availableActions?: import('@splendubious/rules-engine').AvailableActions;
 
   /** Player colors keyed by player ID */
-  playerColors: Record<string, string>;
+  playerColors?: Record<string, string>;
 }
 
 /**

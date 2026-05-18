@@ -628,7 +628,7 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     } else {
       // Extract tier from deck cardId (e.g. 'deck_tier3'), or default to 1 for market cards
       const tierMatch = cardId.match(/deck_tier(\d)/);
-      const tier = tierMatch ? (parseInt(tierMatch[1]) as 1 | 2 | 3) : 1;
+      const tier = tierMatch ? (parseInt(tierMatch[1] ?? '1') as 1 | 2 | 3) : 1;
       dispatch({ type: 'SET_SELECTED_ACTION', action: { type: 'reserve_card', cardId, tier } });
     }
   }, []);
