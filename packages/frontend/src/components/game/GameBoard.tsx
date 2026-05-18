@@ -11,6 +11,7 @@ import { DevelopmentCard, DeckCard } from './DevelopmentCard';
 import { GemToken } from './GemToken';
 import { NobleTile } from './NobleTile';
 import { ActionPanel } from './ActionPanel';
+import { MoveLog } from './MoveLog';
 import { useGame, useAnimation } from '../../context';
 
 const GEM_COLORS: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
@@ -231,9 +232,8 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
         </div>
       </div>
 
-      {/* Gem Bank - Right-Center */}
+      {/* Gem Bank - row under market */}
       <div className="gem-bank-section">
-        <div className="board-section-label">GEMS</div>
         <div className="gem-bank">
           {ALL_GEMS.map((gem) => {
             const isGold = gem === 'gold';
@@ -263,17 +263,23 @@ export function GameBoard({ gameState }: GameBoardProps): JSX.Element {
       <div className="nobles-area">
         <div className="board-section-label">NOBLES</div>
         {gameState.nobles.map((noble) => (
-          <NobleTile
-            key={noble.id}
-            noble={noble}
-            isEligible={isNobleEligible(noble.id)}
-          />
+          <div key={noble.id} data-noble-board={noble.id}>
+            <NobleTile
+              noble={noble}
+              isEligible={isNobleEligible(noble.id)}
+            />
+          </div>
         ))}
       </div>
 
       {/* Action Panel - Bottom Right */}
       <div className="action-panel-area">
         <ActionPanel />
+      </div>
+
+      {/* Move Log - Below Action Panel */}
+      <div className="log-area">
+        <MoveLog />
       </div>
     </div>
   );

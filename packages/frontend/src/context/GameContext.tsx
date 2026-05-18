@@ -14,7 +14,7 @@ import {
   DiscordUser,
 } from '../types';
 import * as socketClient from '../socket/client.js';
-import { triggerGemAnimation, triggerCardAnimation, storeCardPositionForAnimation, getStoredSlotInfo, triggerSlotAnimationStart, triggerDeckToSlotAnimation } from './AnimationContext.js';
+import { triggerGemAnimation, triggerCardAnimation, storeCardPositionForAnimation, storeDeckPositionForAnimation, getStoredSlotInfo, triggerSlotAnimationStart, triggerDeckToSlotAnimation, triggerDeckReserveAnimation, triggerNobleAnimation, syncBoardNobleData, getBoardNobleIds } from './AnimationContext.js';
 
 // =============================================================================
 // STATE TYPES
@@ -201,6 +201,7 @@ interface GameContextValue {
   leaveRoom: () => Promise<void>;
   startGame: (playerCount: 2 | 3 | 4) => Promise<void>;
   updatePlayerName: (name: string) => Promise<void>;
+  updatePlayerColor: (color: string) => Promise<void>;
 
   // Game actions
   takeThreeGems: (gems: GemColor[]) => Promise<void>;
@@ -262,6 +263,8 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     });
     
     const unsubGameStarted = socketClient.onGameStarted((gameState) => {
+      // Initialise noble tracking so the first acquisition animates correctly
+      syncBoardNobleData(gameState.nobles);
       dispatch({ type: 'SET_GAME_STATE', gameState });
       dispatch({ type: 'SET_SCREEN', screen: 'game' });
     });
@@ -320,12 +323,8 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
           });
           
           // After flying card animation completes, trigger deck-to-slot animation
-          // Only animate if there are cards left in the deck
+          // (if deck is empty, the handler will just clear the slot without animation)
           if (slotInfo) {
-            const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
-                            : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
-                            : updatedState.deckCounts.tier3;
-            if (deckCount > 0) {
             setTimeout(() => {
               // Find the new card that's now in this slot from the updated state
               const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
@@ -334,12 +333,6 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
               const newCard = marketTier[slotInfo.slotIndex] || null;
               triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
             }, 2000); // Wait for flying card animation to complete
-            } else {
-              // No cards in deck, just clear the animating slot after the flying card animation
-              setTimeout(() => {
-                triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
-              }, 2000);
-            }
           }
         }
       } else if (action.type === 'RESERVE_CARD' && action.cardId) {
@@ -363,29 +356,39 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
           });
           
           // After flying card animation completes, trigger deck-to-slot animation
-          // Only animate if there are cards left in the deck
+          // (if deck is empty, the handler will just clear the slot without animation)
           if (slotInfo) {
-            const deckCount = slotInfo.tier === 1 ? updatedState.deckCounts.tier1
-                            : slotInfo.tier === 2 ? updatedState.deckCounts.tier2
-                            : updatedState.deckCounts.tier3;
-            if (deckCount > 0) {
-              setTimeout(() => {
-                // Find the new card that's now in this slot from the updated state
-                const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
-                                 : slotInfo.tier === 2 ? updatedState.market.tier2 
-                                 : updatedState.market.tier3;
-                const newCard = marketTier[slotInfo.slotIndex] || null;
-                triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
-              }, 2000); // Wait for flying card animation to complete
-            } else {
-              // No cards in deck, just clear the animating slot after the flying card animation
-              setTimeout(() => {
-                triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, null);
-              }, 2000);
-            }
+            setTimeout(() => {
+              // Find the new card that's now in this slot from the updated state
+              const marketTier = slotInfo.tier === 1 ? updatedState.market.tier1 
+                               : slotInfo.tier === 2 ? updatedState.market.tier2 
+                               : updatedState.market.tier3;
+              const newCard = marketTier[slotInfo.slotIndex] || null;
+              triggerDeckToSlotAnimation(slotInfo.tier, slotInfo.slotIndex, newCard);
+            }, 2000); // Wait for flying card animation to complete
           }
         }
+      } else if (action.type === 'RESERVE_CARD' && action.cardId === null) {
+        // Deck reserve (blind draw): flip animation at deck, then fly to player
+        const player = updatedState.players.find(p => p.id === action.playerId);
+        // The newly reserved card is the last one in the player's reserved array
+        const card = player?.reservedCards?.[player.reservedCards.length - 1];
+        if (card) {
+          triggerDeckReserveAnimation(action.tier, action.playerId, card);
+        }
       }
+
+      // Detect noble acquisitions (covers both auto-acquire and SELECT_NOBLE)
+      const updatedBoardIds = new Set(updatedState.nobles.map((n) => n.id));
+      const acquiredNobleIds = [...getBoardNobleIds()].filter((id) => !updatedBoardIds.has(id));
+      for (const nobleId of acquiredNobleIds) {
+        const acquiringPlayer = updatedState.players.find((p) => p.nobles.some((n) => n.id === nobleId));
+        const nobleData = acquiringPlayer?.nobles.find((n) => n.id === nobleId);
+        if (acquiringPlayer && nobleData) {
+          triggerNobleAnimation(nobleId, acquiringPlayer.id, nobleData.requirements as Record<string, number>);
+        }
+      }
+      syncBoardNobleData(updatedState.nobles);
     });
     
     const unsubError = socketClient.onError((error) => {
@@ -503,6 +506,14 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     }
   }, []);
 
+  const updatePlayerColor = useCallback(async (color: string) => {
+    try {
+      await socketClient.updatePlayerColor(color);
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', error: (error as Error).message });
+    }
+  }, []);
+
   // Game actions
   const takeThreeGems = useCallback(async (gems: GemColor[]) => {
     try {
@@ -538,9 +549,12 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
 
   const reserveCard = useCallback(async (cardId: string | null, tier: CardTier) => {
     try {
-      // Store card position BEFORE sending action (card will be removed from board after action)
+      // Store card/deck position BEFORE sending action (card will be removed from board after action)
       if (cardId) {
         storeCardPositionForAnimation(cardId);
+      } else {
+        // Deck reserve: capture deck element position before the action changes state
+        storeDeckPositionForAnimation(tier);
       }
       
       const action: PlayerAction = {
@@ -612,8 +626,10 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     if (forPurchase) {
       dispatch({ type: 'SET_SELECTED_ACTION', action: { type: 'purchase_card', cardId } });
     } else {
-      // For reserve, we need to know the tier - this will be set by the component
-      dispatch({ type: 'SET_SELECTED_ACTION', action: { type: 'reserve_card', cardId, tier: 1 } });
+      // Extract tier from deck cardId (e.g. 'deck_tier3'), or default to 1 for market cards
+      const tierMatch = cardId.match(/deck_tier(\d)/);
+      const tier = tierMatch ? (parseInt(tierMatch[1]) as 1 | 2 | 3) : 1;
+      dispatch({ type: 'SET_SELECTED_ACTION', action: { type: 'reserve_card', cardId, tier } });
     }
   }, []);
 
@@ -657,6 +673,7 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     leaveRoom,
     startGame,
     updatePlayerName,
+    updatePlayerColor,
     takeThreeGems,
     takeTwoGems,
     reserveCard,

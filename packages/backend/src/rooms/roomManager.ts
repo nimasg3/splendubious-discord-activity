@@ -20,6 +20,17 @@ import {
 /** In-memory room storage */
 const rooms = new Map<string, GameRoom>();
 
+/** Default player colors assigned in order */
+const DEFAULT_COLORS = ['#c0392b', '#2471a3', '#1e8449', '#d4ac0d', '#7d3c98', '#ca6f1e'];
+
+/**
+ * Returns the first default color not already taken in the room
+ */
+function pickDefaultColor(room: GameRoom): string {
+  const taken = new Set(room.players.map(p => p.color));
+  return DEFAULT_COLORS.find(c => !taken.has(c)) ?? DEFAULT_COLORS[0];
+}
+
 // =============================================================================
 // ROOM MANAGEMENT
 // =============================================================================
@@ -42,6 +53,7 @@ export function createRoom(
   const host: RoomPlayer = {
     id: hostId,
     name: hostName,
+    color: DEFAULT_COLORS[0],
     socketId: hostSocketId,
     status: 'connected',
     isSpectator: false,
@@ -118,6 +130,7 @@ export function joinRoom(
   const newPlayer: RoomPlayer = {
     id: playerId,
     name: playerName,
+    color: pickDefaultColor(room),
     socketId: socketId,
     status: 'connected',
     isSpectator: asSpectator,
@@ -228,6 +241,30 @@ export function updatePlayerStatus(
   player.lastActivity = Date.now();
   room.lastActivity = Date.now();
   
+  return room;
+}
+
+/**
+ * Updates a player's chosen color
+ */
+export function updatePlayerColor(
+  roomId: string,
+  playerId: string,
+  color: string
+): GameRoom | undefined {
+  const room = rooms.get(roomId);
+  if (!room) return undefined;
+
+  const player = room.players.find(p => p.id === playerId);
+  if (!player) return undefined;
+
+  // Reject if color already taken by another player
+  const alreadyTaken = room.players.some(p => p.id !== playerId && p.color === color);
+  if (alreadyTaken) return undefined;
+
+  player.color = color;
+  player.lastActivity = Date.now();
+  room.lastActivity = Date.now();
   return room;
 }
 
@@ -356,6 +393,7 @@ export function toPlayerDTO(player: RoomPlayer): PlayerDTO {
   return {
     id: player.id,
     name: player.name,
+    color: player.color,
     status: player.status,
     isSpectator: player.isSpectator,
   };

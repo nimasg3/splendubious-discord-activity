@@ -14,7 +14,23 @@ interface NobleTileProps {
   size?: 'normal' | 'small';
 }
 
-const GEM_COLORS: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
+const GEM_COLOR_NAMES: Record<GemColor, string> = {
+  diamond: 'white',
+  sapphire: 'blue',
+  emerald: 'green',
+  ruby: 'red',
+  onyx: 'black',
+};
+
+// Canonical color order for consistent filename segment ordering
+const COLOR_ORDER: GemColor[] = ['diamond', 'sapphire', 'emerald', 'ruby', 'onyx'];
+
+function nobleImageName(requirements: Record<GemColor, number>): string {
+  const entries = COLOR_ORDER
+    .filter((gem) => (requirements[gem] ?? 0) > 0)
+    .map((gem) => `${requirements[gem]}${GEM_COLOR_NAMES[gem]}`);
+  return entries.join('_');
+}
 
 export function NobleTile({
   noble,
@@ -22,6 +38,7 @@ export function NobleTile({
   onClick,
   size = 'normal',
 }: NobleTileProps): JSX.Element {
+  const imageName = nobleImageName(noble.requirements);
   return (
     <div
       className={`noble-tile ${isEligible ? 'eligible' : ''} size-${size}`}
@@ -29,21 +46,12 @@ export function NobleTile({
       role={isEligible ? 'button' : undefined}
       tabIndex={isEligible ? 0 : undefined}
     >
-      {/* Prestige points (always 3 for nobles) */}
-      <div className="noble-prestige">{noble.prestigePoints}</div>
-      
-      {/* Requirements */}
-      <div className="noble-requirements">
-        {GEM_COLORS.map((gem) => {
-          const requirement = noble.requirements[gem];
-          if (!requirement || requirement === 0) return null;
-          return (
-            <div key={gem} className={`noble-requirement gem-${gem}`}>
-              <span className="requirement-value">{requirement}</span>
-            </div>
-          );
-        })}
-      </div>
+      <img
+        className="noble-tile-image"
+        src={`/cards/nobles/${imageName}.png`}
+        alt={imageName}
+        draggable={false}
+      />
     </div>
   );
 }

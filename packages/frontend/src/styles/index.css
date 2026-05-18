@@ -18,9 +18,9 @@
   --gem-gold: #f39c12;
 
   /* UI colors */
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-card: #0f3460;
+  --bg-primary: #1c0f00;
+  --bg-secondary: #2e1a06;
+  --bg-card: #4a2a10;
   --text-primary: #eaeaea;
   --text-secondary: #a0a0a0;
   --accent: #e94560;
@@ -81,7 +81,7 @@ body {
   font-family: 'Seagram Font', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--bg-primary);
-  background-image: url('/background.jpg');
+  background-image: url('/wood_background.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -100,8 +100,16 @@ button {
    LAYOUT
    ============================================================================= */
 
-.loading-screen,
-.menu-screen,
+.loading-screen {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+}
+
 .lobby-screen {
   height: 100%;
   width: 100%;
@@ -110,6 +118,40 @@ button {
   align-items: center;
   justify-content: center;
   padding: var(--spacing-md);
+  background-image: url('/menu_background.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.lobby-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.menu-screen {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  background-image: url('/menu_background.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.menu-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
 }
 
 .game-screen {
@@ -123,6 +165,9 @@ button {
     "players game";
   gap: var(--spacing-md);
   padding: var(--spacing-md);
+  padding-bottom: 0;
+  padding-right: 32px;
+  border-right-width: 12px;
   overflow: hidden;
 }
 
@@ -153,12 +198,10 @@ button {
 }
 
 .game-title {
-  font-size: 2.5rem;
+  font-size: 5rem;
   margin-bottom: var(--spacing-lg);
-  background: linear-gradient(90deg, var(--gem-ruby), var(--gem-gold), var(--gem-emerald));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
 }
 
 .loading-indicator {
@@ -216,12 +259,15 @@ button {
 
 .menu-content {
   text-align: center;
-  max-width: 400px;
+  max-width: 600px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .menu-header {
   margin-bottom: var(--spacing-xl);
+  text-align: center;
 }
 
 .game-subtitle {
@@ -324,6 +370,8 @@ button {
 .lobby-content {
   max-width: 500px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .lobby-header {
@@ -447,6 +495,48 @@ button {
 .status-disconnected { color: var(--error); }
 .status-reconnecting { color: var(--warning); }
 
+/* Color picker in lobby */
+.player-color-picker {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+}
+
+.color-swatch:hover:not(:disabled) {
+  transform: scale(1.2);
+}
+
+.color-swatch.selected {
+  border-color: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.color-swatch.taken {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Read-only color dot for other players */
+.player-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
 .settings-section,
 .waiting-section {
   margin-bottom: var(--spacing-lg);
@@ -498,6 +588,7 @@ button {
   border-radius: var(--radius-md);
   text-align: center;
   grid-column: 1 / -1;
+  position: relative;
 }
 
 .game-ended,
@@ -525,6 +616,262 @@ button {
   margin-left: var(--spacing-md);
 }
 
+/* =============================================================================
+   SETTINGS MENU
+   ============================================================================= */
+
+/* Positioned absolutely in the top-left of the status banner */
+.settings-menu {
+  position: relative;
+  z-index: 50;
+}
+
+/* In the game screen banner, pin to the left edge */
+.game-status-banner .settings-menu {
+  position: absolute;
+  left: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Fixed top-left corner used on menu / lobby screens */
+.screen-settings-corner {
+  position: fixed;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  z-index: 200;
+}
+
+.settings-cog-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 5px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 200ms ease, opacity 200ms ease;
+  line-height: 0;
+}
+
+.settings-cog-btn:hover,
+.settings-cog-btn.active {
+  background: var(--bg-card);
+}
+
+.settings-icon-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+  opacity: 0.7;
+  transition: opacity 200ms ease;
+}
+
+.screen-settings-corner .settings-icon-img {
+  width: 44px;
+  height: 44px;
+}
+
+.settings-cog-btn:hover .settings-icon-img,
+.settings-cog-btn.active .settings-icon-img {
+  opacity: 1;
+}
+
+.settings-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-card);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  z-index: 100;
+  min-width: 148px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* On the fixed corner button, keep dropdown left-aligned */
+.screen-settings-corner .settings-dropdown {
+  left: 0;
+  right: auto;
+}
+
+.settings-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 9px var(--spacing-sm);
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: background 150ms ease;
+}
+
+.settings-dropdown-item:hover {
+  background: var(--bg-card);
+}
+
+.settings-dropdown-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Dialog overlay */
+.settings-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+/* Dialog panel */
+.settings-dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  min-width: 320px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.settings-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.settings-dialog-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dialog-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.dialog-close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+
+/* Volume sliders */
+.volume-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.volume-slider-row:last-child {
+  margin-bottom: 0;
+}
+
+.volume-slider-label {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.volume-slider {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.volume-slider-value {
+  width: 38px;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* How To Play dialog — sized for 16:9 infographic content */
+.settings-dialog--howtoplay {
+  width: 70vw;
+  max-width: 70vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-dialog--howtoplay .settings-dialog-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.howtoplay-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.howtoplay-image {
+  width: 100%;
+  /* Cap height so the dialog chrome (header + nav + padding ~160px) fits within 90vh */
+  max-height: calc(90vh - 160px);
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  display: block;
+}
+.howtoplay-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--spacing-md);
+}
+
+.howtoplay-nav-btn {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 200ms ease, opacity 200ms ease;
+}
+
+.howtoplay-nav-btn:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.howtoplay-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.howtoplay-nav-indicator {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
 /* Players sidebar - left 40% column with opponents and local player */
 .players-sidebar {
   grid-area: players;
@@ -535,6 +882,7 @@ button {
   max-height: 100%;
   padding: 4px;
   margin: -4px;
+  padding-bottom: 12px;
 }
 
 .opponents-section {
@@ -571,7 +919,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  justify-content: stretch;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -581,9 +929,206 @@ button {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   padding: var(--spacing-md);
-  overflow: auto;
+  padding-bottom: 0;
+  padding-right: 0;
+  overflow: hidden;
+}
+
+/* =============================================================================
+   MOVE LOG
+   ============================================================================= */
+
+.move-log {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  background: rgba(28, 15, 0, 0.88);
+  border-radius: var(--radius-md);
+  border-top: 2px solid var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.move-log-header {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px var(--spacing-md);
+  background: rgba(74, 42, 16, 0.95);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  flex-shrink: 0;
+}
+
+.move-log-entries {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding: var(--spacing-xs) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.move-log-empty {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.move-log-entry {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.log-player-name {
+  font-weight: bold;
+  color: var(--gem-gold);
+}
+
+.log-verb {
+  color: var(--text-secondary);
+}
+
+/* Gem token in log — scale down the existing GemToken */
+.log-gem-token-wrap .gem-token.size-small {
+  width: 28px;
+  height: 28px;
+  font-size: 0.8rem;
+  pointer-events: none;
+  cursor: default;
+}
+
+.log-gems-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Mini card in log — mirrors reserved-card layout at smaller scale */
+.log-card-mini {
+  display: inline-flex;
+  flex-direction: column;
+  width: 42px;
+  height: 58px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 3px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  overflow: hidden;
+}
+
+.log-card-mini::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: rgba(255, 255, 255, 0.45);
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 3px 3px 0 0;
+}
+
+.log-card-mini.bonus-emerald  { border-color: rgba(46, 204, 113, 0.5); }
+.log-card-mini.bonus-diamond  { border-color: rgba(236, 240, 241, 0.5); }
+.log-card-mini.bonus-sapphire { border-color: rgba(52, 152, 219, 0.5); }
+.log-card-mini.bonus-onyx     { border-color: rgba(44, 62, 80, 0.5); }
+.log-card-mini.bonus-ruby     { border-color: rgba(231, 76, 60, 0.5); }
+
+.log-card-mini-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.log-card-mini-prestige {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: white;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+}
+
+.log-card-mini-bonus {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.log-card-mini-bonus-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.log-card-mini-costs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.log-noble-mini {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+  vertical-align: middle;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.log-noble-mini-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Reuse .cost-pip sizing but keep colour classes consistent */
+.log-cost-pip {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: white;
+  overflow: hidden;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
 }
 
 /* Game End Overlay */
@@ -735,33 +1280,50 @@ button {
 
 .game-board {
   display: grid;
-  grid-template-columns: auto min-content min-content;
-  grid-template-rows: 1fr auto;
+  grid-template-columns: auto min-content;
+  grid-template-rows: auto auto 1fr;
   grid-template-areas:
-    "market gems nobles"
-    "market action action";
+    "market nobles"
+    "gems    log"
+    "action  log";
   gap: var(--spacing-xl);
   column-gap: var(--spacing-md);
   padding: var(--spacing-xl);
-  background: var(--bg-secondary);
+  padding-bottom: 0;
+  padding-right: 0;
+  background: transparent;
   border-radius: var(--radius-lg);
   max-width: 100%;
-  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* Action Panel Area - Bottom Right */
+.log-area {
+  grid-area: log;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+  padding-right: 60px;
+  padding-bottom: var(--spacing-md);
+}
+
+/* Action Panel Area */
 .action-panel-area {
   grid-area: action;
-  justify-self: end;
+  justify-self: center;
   align-self: start;
-  min-height: 120px;
   width: fit-content;
+  overflow: hidden;
 }
 
 .board-section-label {
   font-size: 0.75rem;
   font-weight: bold;
-  color: var(--text-secondary);
+  color: #1a0a00;
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: var(--spacing-sm);
@@ -771,21 +1333,26 @@ button {
 }
 
 /* Card Market - includes deck stacks and face-up cards */
+.nobles-area .board-section-label {
+  margin-bottom: 16px;
+}
+
+
 .card-market {
   grid-area: market;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 .market-row {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 .card-slot {
-  width: 130px;
-  height: 180px;
+  width: 155px;
+  height: 215px;
   border-radius: var(--radius-md);
 }
 
@@ -795,31 +1362,31 @@ button {
   border: 2px dashed var(--text-secondary);
 }
 
-/* Gem Bank - Right-Center */
+/* Gem Bank - row under market */
 .gem-bank-section {
   grid-area: gems;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   align-self: start;
+  justify-self: center;
   width: fit-content;
   gap: var(--spacing-sm);
-  margin-left: var(--spacing-md);
 }
 
 .gem-bank {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: var(--bg-primary);
+  flex-direction: row;
+  gap: var(--spacing-md);
+  padding: 0;
+  background: transparent;
   border-radius: var(--radius-md);
 }
 
 .gem-stack {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: 84px;
+  height: 84px;
 }
 
 .gem-selected-indicator {
@@ -840,7 +1407,7 @@ button {
   grid-area: nobles;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing-xs) + 5px);
+  gap: var(--spacing-sm);
   align-self: start;
   width: fit-content;
 }
@@ -858,11 +1425,23 @@ button {
 }
 
 .player-panel.current-turn {
-  box-shadow: 0 0 0 3px var(--accent);
+  box-shadow: 0 0 0 3px var(--player-color, var(--accent));
 }
 
+/* When a player color is set via inline style, fill the panel with a dark tint,
+   a solid border, and a tiling low-poly geometric texture overlay.
+   The SVG tile is a fixed 120×120px so it never distorts as the panel resizes. */
+.player-panel[style] {
+  background-color: color-mix(in srgb, var(--player-color) 60%, #0d0d0d);
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><polygon points='0,0 40,0 0,40' fill='white' fill-opacity='0.06'/><polygon points='40,0 40,40 0,40' fill='black' fill-opacity='0.09'/><polygon points='40,0 80,0 80,40' fill='black' fill-opacity='0.07'/><polygon points='40,0 80,40 40,40' fill='white' fill-opacity='0.05'/><polygon points='80,0 120,0 80,40' fill='white' fill-opacity='0.04'/><polygon points='120,0 120,40 80,40' fill='black' fill-opacity='0.11'/><polygon points='0,40 40,40 40,80' fill='black' fill-opacity='0.05'/><polygon points='0,40 40,80 0,80' fill='white' fill-opacity='0.08'/><polygon points='40,40 80,40 40,80' fill='white' fill-opacity='0.07'/><polygon points='80,40 80,80 40,80' fill='black' fill-opacity='0.06'/><polygon points='80,40 120,40 120,80' fill='white' fill-opacity='0.04'/><polygon points='80,40 120,80 80,80' fill='black' fill-opacity='0.10'/><polygon points='0,80 40,80 0,120' fill='white' fill-opacity='0.05'/><polygon points='40,80 40,120 0,120' fill='black' fill-opacity='0.08'/><polygon points='40,80 80,80 80,120' fill='black' fill-opacity='0.06'/><polygon points='40,80 80,120 40,120' fill='white' fill-opacity='0.07'/><polygon points='80,80 120,80 80,120' fill='white' fill-opacity='0.09'/><polygon points='120,80 120,120 80,120' fill='black' fill-opacity='0.05'/></svg>");
+  background-repeat: repeat;
+  background-size: 120px 120px;
+  border: 2px solid color-mix(in srgb, var(--player-color) 80%, #000);
+}
+
+/* Local player panel — keep the tinted background, don't override with bg-card */
 .player-panel.local-player {
-  background: var(--bg-card);
+  /* inherits color-tinted background from [style] rule above */
 }
 
 /* Opponent panels in sidebar - compact style */
@@ -1017,8 +1596,8 @@ button {
 }
 
 .gem-placeholder {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
 }
 
 .column-cards {
@@ -1051,50 +1630,61 @@ button {
   height: 80px;
   background: var(--bg-card);
   border-radius: var(--radius-sm);
-  padding: var(--spacing-xs);
+  padding: 0 var(--spacing-xs) var(--spacing-xs);
   display: flex;
   flex-direction: column;
   border: 1px solid var(--text-secondary);
   position: relative;
+  overflow: hidden;
+}
+
+.purchased-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: rgba(255, 255, 255, 0.45);
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 /* Gem-colored purchased card backgrounds - based on bonus gem */
 .purchased-card:has(.card-bonus.gem-emerald) {
-  background-color: #1a3d2a;
   border-color: var(--gem-emerald);
 }
 
 .purchased-card:has(.card-bonus.gem-diamond) {
-  background-color: #3a3d3e;
   border-color: var(--gem-diamond);
 }
 
 .purchased-card:has(.card-bonus.gem-sapphire) {
-  background-color: #1a2d3d;
   border-color: var(--gem-sapphire);
 }
 
 .purchased-card:has(.card-bonus.gem-onyx) {
-  background-color: #1a1f24;
   border-color: #5a6570;
 }
 
 .purchased-card:has(.card-bonus.gem-ruby) {
-  background-color: #3d1a1a;
   border-color: var(--gem-ruby);
 }
 
 .purchased-card-header {
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .purchased-card .card-prestige {
   font-size: 0.9rem;
   font-weight: bold;
-  color: var(--gem-gold);
+  color: white;
   margin-right: auto;
   text-shadow: 
     -1px -1px 0 #000,
@@ -1114,6 +1704,8 @@ button {
   flex-wrap: wrap;
   gap: 2px;
   margin-top: auto;
+  position: relative;
+  z-index: 2;
 }
 
 /* Reserved cards section - now positioned horizontally */
@@ -1134,36 +1726,46 @@ button {
   height: 80px;
   background: var(--bg-card);
   border-radius: var(--radius-sm);
-  padding: var(--spacing-xs);
+  padding: 0 var(--spacing-xs) var(--spacing-xs);
   display: flex;
   flex-direction: column;
   border: 1px solid var(--text-secondary);
   transition: var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.reserved-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: rgba(255, 255, 255, 0.45);
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 /* Gem-colored reserved card backgrounds - based on bonus gem */
 .reserved-card:has(.card-bonus.gem-emerald) {
-  background-color: #1a3d2a;
   border-color: var(--gem-emerald);
 }
 
 .reserved-card:has(.card-bonus.gem-diamond) {
-  background-color: #3a3d3e;
   border-color: var(--gem-diamond);
 }
 
 .reserved-card:has(.card-bonus.gem-sapphire) {
-  background-color: #1a2d3d;
   border-color: var(--gem-sapphire);
 }
 
 .reserved-card:has(.card-bonus.gem-onyx) {
-  background-color: #1a1f24;
   border-color: #5a6570;
 }
 
 .reserved-card:has(.card-bonus.gem-ruby) {
-  background-color: #3d1a1a;
   border-color: var(--gem-ruby);
 }
 
@@ -1192,13 +1794,15 @@ button {
 .reserved-card-header {
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
+  align-items: center;
+  position: relative;
+  z-index: 2;
 }
 
 .reserved-card .card-prestige {
   font-size: 0.9rem;
   font-weight: bold;
-  color: var(--gem-gold);
+  color: white;
   margin-right: auto;
   text-shadow: 
     -1px -1px 0 #000,
@@ -1218,16 +1822,19 @@ button {
   flex-wrap: wrap;
   gap: 2px;
   margin-top: auto;
+  position: relative;
+  z-index: 2;
 }
 
 .cost-pip {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  overflow: hidden;
+  font-size: 0.75rem;
   font-weight: bold;
   color: white;
   text-shadow: 
@@ -1255,8 +1862,8 @@ button {
   border-radius: var(--radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
   gap: var(--spacing-sm);
   min-width: 280px;
 }
@@ -1269,6 +1876,7 @@ button {
   padding: var(--spacing-sm);
   border-radius: var(--radius-sm);
   background: var(--bg-primary);
+  flex: 1;
 }
 
 .selection-status.ready {
@@ -1377,6 +1985,9 @@ button {
   font-weight: bold;
   cursor: pointer;
   color: white;
+  background: none;
+  overflow: hidden;
+  position: relative;
   text-shadow: 
     -1px -1px 0 #000,
     1px -1px 0 #000,
@@ -1385,21 +1996,38 @@ button {
 }
 
 .gem-token.size-small {
-  width: 32px;
-  height: 32px;
-  font-size: 0.85rem;
+  width: 44px;
+  height: 44px;
+  font-size: 0.95rem;
 }
 
 .gem-token.size-medium {
-  width: 44px;
-  height: 44px;
-  font-size: 1rem;
+  width: 54px;
+  height: 54px;
+  font-size: 1.05rem;
 }
 
 .gem-token.size-large {
-  width: 56px;
-  height: 56px;
-  font-size: 1.1rem;
+  width: 84px;
+  height: 84px;
+  font-size: 1.4rem;
+}
+
+.gem-token-coin-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gem-token-coin-img--blurred {
+  filter: blur(0.4px);
+}
+
+.gem-count {
+  position: relative;
+  z-index: 1;
 }
 
 .gem-token:hover:not(:disabled) {
@@ -1417,20 +2045,20 @@ button {
   transform: none;
 }
 
-.gem-emerald { background-color: var(--gem-emerald); color: white; }
-.gem-diamond { background-color: var(--gem-diamond); color: white; }
-.gem-sapphire { background-color: var(--gem-sapphire); color: white; }
-.gem-onyx { background-color: var(--gem-onyx); color: white; }
-.gem-ruby { background-color: var(--gem-ruby); color: white; }
-.gem-gold { background-color: var(--gem-gold); color: white; }
+.gem-emerald { color: white; }
+.gem-diamond { color: white; }
+.gem-sapphire { color: white; }
+.gem-onyx { color: white; }
+.gem-ruby { color: white; }
+.gem-gold { color: white; }
 
 /* =============================================================================
    DEVELOPMENT CARDS
    ============================================================================= */
 
 .development-card {
-  width: 130px;
-  height: 180px;
+  width: 155px;
+  height: 215px;
   background-color: var(--bg-card);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
@@ -1440,27 +2068,28 @@ button {
   flex-direction: column;
   position: relative;
   border: 2px solid transparent;
+  overflow: hidden;
 }
 
 /* Gem-colored card backgrounds - based on bonus gem */
 .development-card:has(.card-bonus.gem-emerald) {
-  background-color: rgba(46, 204, 113, 0.15);
+  border-color: rgba(30, 110, 66, 0.5);
 }
 
 .development-card:has(.card-bonus.gem-diamond) {
-  background-color: rgba(236, 240, 241, 0.2);
+  border-color: rgba(157, 173, 181, 0.5);
 }
 
 .development-card:has(.card-bonus.gem-sapphire) {
-  background-color: rgba(52, 152, 219, 0.15);
+  border-color: rgba(29, 92, 138, 0.5);
 }
 
 .development-card:has(.card-bonus.gem-onyx) {
-  background-color: rgba(44, 62, 80, 0.25);
+  border-color: rgba(44, 62, 80, 0.5);
 }
 
 .development-card:has(.card-bonus.gem-ruby) {
-  background-color: rgba(231, 76, 60, 0.15);
+  border-color: rgba(139, 35, 23, 0.5);
 }
 
 .development-card:hover:not(.disabled) {
@@ -1488,17 +2117,33 @@ button {
   cursor: not-allowed;
 }
 
+/* Semi-transparent white strip over the top quarter of every development card */
+.development-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: rgba(255, 255, 255, 0.45);
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: auto;
+  position: relative;
+  z-index: 2;
 }
 
 .card-prestige {
   font-size: 1.4rem;
   font-weight: bold;
-  color: var(--gem-gold);
+  color: white;
   text-shadow: 
     -1px -1px 0 #000,
     1px -1px 0 #000,
@@ -1507,10 +2152,25 @@ button {
 }
 
 .card-bonus {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  border: 2px solid rgba(255,255,255,0.3);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+}
+
+.card-bonus-gem-icon {
+  width: 32px;
+  height: 32px;
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+}
+
+.purchased-card .card-bonus-gem-icon,
+.reserved-card .card-bonus-gem-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .card-costs {
@@ -1518,15 +2178,29 @@ button {
   flex-direction: column;
   gap: 2px;
   margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Background art image — sits behind all card content */
+.card-bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .card-cost {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .card-cost .cost-value {
@@ -1542,8 +2216,8 @@ button {
 
 /* Deck Card */
 .deck-card {
-  width: 130px;
-  height: 180px;
+  width: 155px;
+  height: 215px;
   border-radius: var(--radius-md);
   border: 2px solid var(--bg-card);
   cursor: pointer;
@@ -1577,6 +2251,13 @@ button {
   cursor: default;
 }
 
+.deck-card.empty {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px dashed var(--bg-card);
+  opacity: 0.4;
+  cursor: default;
+}
+
 .deck-count {
   position: absolute;
   bottom: 8px;
@@ -1600,36 +2281,18 @@ button {
    ============================================================================= */
 
 .noble-tile {
-  width: 104px;
-  height: 72px;
-  background-color: var(--bg-card);
+  width: 129px;
+  height: 129px;
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
   transition: var(--transition-fast);
+  background-color: var(--bg-card);
 }
 
 .noble-tile.size-small {
-  width: 56px;
-  height: 44px;
-  padding: var(--spacing-xs);
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-sm);
-}
-
-.noble-tile.size-small .noble-prestige {
-  font-size: 0.8rem;
-  margin-bottom: 2px;
-}
-
-.noble-tile.size-small .noble-requirements {
-  gap: 2px;
-}
-
-.noble-tile.size-small .noble-requirement {
-  width: 12px;
-  height: 12px;
-  font-size: 0.55rem;
 }
 
 .noble-tile.eligible {
@@ -1641,44 +2304,11 @@ button {
   transform: scale(1.05);
 }
 
-.noble-prestige {
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: var(--gem-gold);
-  margin-bottom: var(--spacing-xs);
-  text-shadow: 
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
-}
-
-.noble-requirements {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  gap: 6px;
-  margin-top: auto;
-}
-
-.noble-requirement {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-
-.requirement-value {
-  color: white;
-  text-shadow: 
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
+.noble-tile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* =============================================================================
@@ -1790,35 +2420,18 @@ button {
 .flying-gem {
   position: fixed;
   border-radius: 50%;
+  overflow: hidden;
   transition: all 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.3),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3);
   opacity: 1;
 }
 
-.flying-gem.gem-emerald {
-  background: radial-gradient(circle at 30% 30%, #5dde92, var(--gem-emerald), #1a9c4c);
-}
-
-.flying-gem.gem-diamond {
-  background: radial-gradient(circle at 30% 30%, #ffffff, var(--gem-diamond), #bdc3c7);
-}
-
-.flying-gem.gem-sapphire {
-  background: radial-gradient(circle at 30% 30%, #5dade2, var(--gem-sapphire), #2471a3);
-}
-
-.flying-gem.gem-onyx {
-  background: radial-gradient(circle at 30% 30%, #5d6d7e, var(--gem-onyx), #1c2833);
-}
-
-.flying-gem.gem-ruby {
-  background: radial-gradient(circle at 30% 30%, #ec7063, var(--gem-ruby), #b03a2e);
-}
-
+.flying-gem.gem-emerald,
+.flying-gem.gem-diamond,
+.flying-gem.gem-sapphire,
+.flying-gem.gem-onyx,
+.flying-gem.gem-ruby,
 .flying-gem.gem-gold {
-  background: radial-gradient(circle at 30% 30%, #f7dc6f, var(--gem-gold), #b7950b);
+  background: transparent;
 }
 
 /* =============================================================================
@@ -1840,30 +2453,26 @@ button {
   pointer-events: none;
   z-index: 1001;
   transform-origin: center center;
+  overflow: hidden;
 }
 
 .flying-card.bonus-emerald {
-  background-color: rgb(30, 60, 40);
   border: 2px solid rgba(46, 204, 113, 0.6);
 }
 
 .flying-card.bonus-diamond {
-  background-color: rgb(60, 65, 70);
   border: 2px solid rgba(236, 240, 241, 0.6);
 }
 
 .flying-card.bonus-sapphire {
-  background-color: rgb(25, 50, 75);
   border: 2px solid rgba(52, 152, 219, 0.6);
 }
 
 .flying-card.bonus-onyx {
-  background-color: rgb(35, 40, 50);
   border: 2px solid rgba(44, 62, 80, 0.6);
 }
 
 .flying-card.bonus-ruby {
-  background-color: rgb(70, 35, 35);
   border: 2px solid rgba(231, 76, 60, 0.6);
 }
 
@@ -1872,12 +2481,14 @@ button {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .flying-card .card-prestige {
   font-size: 1rem;
   font-weight: bold;
-  color: var(--gem-gold);
+  color: white;
   text-shadow: 
     -1px -1px 0 #000,
     1px -1px 0 #000,
@@ -1890,6 +2501,11 @@ button {
   height: 20px;
   border-radius: var(--radius-sm);
   border: 2px solid rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: none;
 }
 
 .flying-card-cost {
@@ -1897,6 +2513,8 @@ button {
   flex-wrap: wrap;
   gap: 2px;
   margin-top: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .flying-card .cost-pip {
@@ -1906,6 +2524,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   font-size: 0.6rem;
   font-weight: bold;
   color: white;
@@ -1914,6 +2533,23 @@ button {
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000;
+}
+
+/* =============================================================================
+   FLYING NOBLE ANIMATION
+   ============================================================================= */
+
+.flying-noble {
+  position: fixed;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: left 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              top 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 950ms ease-out;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 1001;
 }
 
 /* =============================================================================
@@ -1929,7 +2565,16 @@ button {
               top 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.deck-to-slot-card .flip-card-back {
+/* Deck reserve card: flip in place then fly to player (transitions managed via inline style) */
+.deck-reserve-card {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1002;
+  perspective: 1000px;
+}
+
+.deck-to-slot-card .flip-card-back,
+.deck-reserve-card .flip-card-back {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -1939,11 +2584,13 @@ button {
   transform: rotateY(0deg);
 }
 
-.deck-to-slot-card .flip-card-front-wrapper {
+.deck-to-slot-card .flip-card-front-wrapper,
+.deck-reserve-card .flip-card-front-wrapper {
   perspective: 1000px;
 }
 
-.deck-to-slot-card .flip-card-front {
+.deck-to-slot-card .flip-card-front,
+.deck-reserve-card .flip-card-front {
   position: relative;
   width: 100%;
   height: 100%;
@@ -1955,16 +2602,19 @@ button {
   flex-direction: column;
   padding: var(--spacing-md);
   border: 2px solid transparent;
+  overflow: hidden;
   /* No base background - let bonus classes set it */
 }
 
 /* Flip animation - when showing front */
 .deck-to-slot-card.phase-flipping .flip-card-back,
-.deck-to-slot-card.show-front .flip-card-back {
+.deck-to-slot-card.show-front .flip-card-back,
+.deck-reserve-card.show-front .flip-card-back {
   transform: rotateY(-180deg);
 }
 
-.deck-to-slot-card .flip-card-image {
+.deck-to-slot-card .flip-card-image,
+.deck-reserve-card .flip-card-image {
   width: 100%;
   height: 100%;
   object-fit: fill;
@@ -1972,75 +2622,43 @@ button {
 }
 
 /* Card front styling based on bonus color - matching development-card exactly */
-.deck-to-slot-card .flip-card-front.bonus-emerald {
-  background-color: rgba(46, 204, 113, 0.15);
+.deck-to-slot-card .flip-card-front.bonus-emerald,
+.deck-reserve-card .flip-card-front.bonus-emerald {
+  border-color: rgba(46, 204, 113, 0.6);
 }
 
-.deck-to-slot-card .flip-card-front.bonus-diamond {
-  background-color: rgba(236, 240, 241, 0.2);
+.deck-to-slot-card .flip-card-front.bonus-diamond,
+.deck-reserve-card .flip-card-front.bonus-diamond {
+  border-color: rgba(236, 240, 241, 0.6);
 }
 
-.deck-to-slot-card .flip-card-front.bonus-sapphire {
-  background-color: rgba(52, 152, 219, 0.15);
+.deck-to-slot-card .flip-card-front.bonus-sapphire,
+.deck-reserve-card .flip-card-front.bonus-sapphire {
+  border-color: rgba(52, 152, 219, 0.6);
 }
 
-.deck-to-slot-card .flip-card-front.bonus-onyx {
-  background-color: rgba(44, 62, 80, 0.25);
+.deck-to-slot-card .flip-card-front.bonus-onyx,
+.deck-reserve-card .flip-card-front.bonus-onyx {
+  border-color: rgba(44, 62, 80, 0.6);
 }
 
-.deck-to-slot-card .flip-card-front.bonus-ruby {
-  background-color: rgba(231, 76, 60, 0.15);
+.deck-to-slot-card .flip-card-front.bonus-ruby,
+.deck-reserve-card .flip-card-front.bonus-ruby {
+  border-color: rgba(231, 76, 60, 0.6);
 }
 
 /* Card front content styling - matching development card styles exactly */
-.deck-to-slot-card .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: auto;
-}
-
-.deck-to-slot-card .card-prestige {
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: var(--gem-gold);
-  text-shadow: 
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
-}
-
-.deck-to-slot-card .card-bonus {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  border: 2px solid rgba(255,255,255,0.3);
-}
-
-.deck-to-slot-card .card-costs {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: auto;
-}
-
-.deck-to-slot-card .card-cost {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.deck-to-slot-card .cost-value {
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: white;
-  text-shadow: 
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
+/* White overlay strip on flip card front — matches development-card::before */
+.deck-to-slot-card .flip-card-front::before,
+.deck-reserve-card .flip-card-front::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: rgba(255, 255, 255, 0.45);
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }

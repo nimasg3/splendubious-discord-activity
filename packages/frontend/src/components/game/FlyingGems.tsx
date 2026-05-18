@@ -8,20 +8,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useAnimation } from '../../context/AnimationContext.js';
 import { GemColor } from '@splendubious/rules-engine';
 import { CardDisplay } from '../../types.js';
-
-const GEM_COLORS: Record<string, string> = {
-  emerald: '#2ecc71',
-  diamond: '#ecf0f1',
-  sapphire: '#3498db',
-  onyx: '#2c3e50',
-  ruby: '#e74c3c',
-  gold: '#f39c12',
-};
+import { GEM_IMAGE, getCardImage } from './DevelopmentCard.js';
+import { COIN_IMAGE, COIN_SCALE } from './GemToken.js';
+import { playSound } from '../../sound/manager.js';
 
 const GEM_COLOR_LIST: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
 
 export function FlyingGems(): JSX.Element {
-  const { flyingGems, flyingCards, deckToSlotAnimations, removeAnimation, removeCardAnimation, removeDeckToSlotAnimation } = useAnimation();
+  const { flyingGems, flyingCards, flyingNobles, deckToSlotAnimations, deckReserveAnimations, removeAnimation, removeCardAnimation, removeNobleAnimation, removeDeckToSlotAnimation, removeDeckReserveAnimation } = useAnimation();
 
   return (
     <div className="flying-gems-container">
@@ -43,6 +37,7 @@ export function FlyingGems(): JSX.Element {
         <FlyingCard
           key={card.id}
           id={card.id}
+          cardId={card.cardId}
           bonus={card.bonus}
           tier={card.tier}
           prestigePoints={card.prestigePoints}
@@ -56,6 +51,19 @@ export function FlyingGems(): JSX.Element {
           endWidth={card.endWidth}
           endHeight={card.endHeight}
           onComplete={() => removeCardAnimation(card.id)}
+        />
+      ))}
+      {flyingNobles.map((noble) => (
+        <FlyingNoble
+          key={noble.id}
+          id={noble.id}
+          imageName={noble.imageName}
+          startX={noble.startX}
+          startY={noble.startY}
+          endX={noble.endX}
+          endY={noble.endY}
+          size={noble.size}
+          onComplete={() => removeNobleAnimation(noble.id)}
         />
       ))}
       {deckToSlotAnimations.map((anim) => (
@@ -73,6 +81,23 @@ export function FlyingGems(): JSX.Element {
           scaleY={anim.scaleY}
           newCard={anim.newCard}
           onComplete={() => removeDeckToSlotAnimation(anim.id)}
+        />
+      ))}
+      {deckReserveAnimations.map((anim) => (
+        <DeckReserveCard
+          key={anim.id}
+          id={anim.id}
+          tier={anim.tier}
+          startX={anim.startX}
+          startY={anim.startY}
+          endX={anim.endX}
+          endY={anim.endY}
+          width={anim.width}
+          height={anim.height}
+          scaleX={anim.scaleX}
+          scaleY={anim.scaleY}
+          card={anim.card}
+          onComplete={() => removeDeckReserveAnimation(anim.id)}
         />
       ))}
     </div>
@@ -135,14 +160,18 @@ function FlyingGem({
     };
   }, [startX, startY, endX, endY, startSize, endSize, onComplete]);
 
+  const coinSrc = COIN_IMAGE[color as GemColor | 'gold'];
+  const coinScale = parseFloat(COIN_SCALE[color as GemColor | 'gold'] || '100') / 100;
+
   return (
-    <div
-      ref={elementRef}
-      className={`flying-gem gem-${color}`}
-      style={{
-        backgroundColor: GEM_COLORS[color] || '#888',
-      }}
-    />
+    <div ref={elementRef} className={`flying-gem gem-${color}`}>
+      <img
+        src={coinSrc}
+        alt=""
+        draggable={false}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${coinScale})` }}
+      />
+    </div>
   );
 }
 
@@ -152,6 +181,7 @@ function FlyingGem({
 
 interface FlyingCardProps {
   id: string;
+  cardId: string;
   bonus: GemColor;
   tier: 1 | 2 | 3;
   prestigePoints: number;
@@ -168,8 +198,9 @@ interface FlyingCardProps {
 }
 
 function FlyingCard({
+  cardId,
   bonus,
-  tier: _tier,
+  tier,
   prestigePoints,
   cost,
   startX,
@@ -221,19 +252,96 @@ function FlyingCard({
       ref={elementRef}
       className={`flying-card bonus-${bonus}`}
     >
+      <img className="card-bg-image" src={getCardImage(cardId, bonus, tier)} alt="" draggable={false} />
       <div className="flying-card-header">
         {prestigePoints > 0 && <span className="card-prestige">{prestigePoints}</span>}
-        <span className={`card-bonus gem-${bonus}`} />
+        <span className={`card-bonus gem-${bonus}`}>
+          <img src={GEM_IMAGE[bonus]} alt={bonus} className="card-bonus-gem-icon" draggable={false} />
+        </span>
       </div>
       <div className="flying-card-cost">
         {GEM_COLOR_LIST.map((gem) => {
           const gemCost = cost[gem];
           if (!gemCost || gemCost === 0) return null;
           return (
-            <span key={gem} className={`cost-pip gem-${gem}`}>{gemCost}</span>
+            <span
+              key={gem}
+              className={`cost-pip gem-${gem}`}
+              style={{
+                backgroundImage: `url(${COIN_IMAGE[gem]})`,
+                backgroundSize: COIN_SCALE[gem],
+                backgroundPosition: 'center',
+              }}
+            >{gemCost}</span>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// FLYING NOBLE COMPONENT
+// =============================================================================
+
+interface FlyingNobleProps {
+  id: string;
+  imageName: string;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  size: number;
+  onComplete: () => void;
+}
+
+function FlyingNoble({
+  imageName,
+  startX,
+  startY,
+  endX,
+  endY,
+  size,
+  onComplete,
+}: FlyingNobleProps): JSX.Element {
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
+    element.style.left = `${startX}px`;
+    element.style.top = `${startY}px`;
+    element.style.width = `${size}px`;
+    element.style.height = `${size}px`;
+    element.style.transform = 'translate(-50%, -50%) scale(1)';
+    element.style.opacity = '1';
+
+    requestAnimationFrame(() => {
+      element.style.left = `${endX}px`;
+      element.style.top = `${endY}px`;
+      element.style.transform = 'translate(-50%, -50%) scale(0)';
+    });
+
+    const fadeTimeout = setTimeout(() => {
+      element.style.opacity = '0';
+    }, 950);
+
+    const timeout = setTimeout(onComplete, 2000);
+    return () => {
+      clearTimeout(fadeTimeout);
+      clearTimeout(timeout);
+    };
+  }, [startX, startY, endX, endY, size, onComplete]);
+
+  return (
+    <div ref={elementRef} className="flying-noble">
+      <img
+        src={`/cards/nobles/${imageName}.png`}
+        alt={imageName}
+        draggable={false}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+      />
     </div>
   );
 }
@@ -265,8 +373,8 @@ function DeckToSlotCard({
   endY,
   width,
   height,
-  scaleX,
-  scaleY,
+  scaleX: _scaleX,
+  scaleY: _scaleY,
   newCard,
   onComplete,
 }: DeckToSlotCardProps): JSX.Element {
@@ -295,6 +403,7 @@ function DeckToSlotCard({
     const flipStartTimeout = setTimeout(() => {
       setPhase('flipping');
       setShowFront(true);
+      playSound('card-flip');
     }, 800);
 
     // After flip completes, mark as done and cleanup
@@ -323,7 +432,7 @@ function DeckToSlotCard({
         />
       </div>
       
-      {/* Card front - wrapper handles scale, inner handles rotation */}
+      {/* Card front - wrapper fills the outer container which is already sized to the slot */}
       {newCard && (
         <div 
           className="flip-card-front-wrapper"
@@ -331,10 +440,8 @@ function DeckToSlotCard({
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '130px',
-            height: '180px',
-            transform: `scale(${scaleX}, ${scaleY})`,
-            transformOrigin: 'top left',
+            width: '100%',
+            height: '100%',
           }}
         >
           <div 
@@ -343,18 +450,29 @@ function DeckToSlotCard({
               transform: `rotateY(${showFront ? '0deg' : '180deg'})`,
             }}
           >
+            <img className="card-bg-image" src={getCardImage(newCard.id, newCard.bonus, newCard.tier)} alt="" draggable={false} />
             <div className="card-header">
               <span className="card-prestige">
                 {newCard.prestigePoints > 0 ? newCard.prestigePoints : ''}
               </span>
-              <span className={`card-bonus gem-indicator gem-${newCard.bonus}`} />
+              <span className={`card-bonus gem-${newCard.bonus}`}>
+                <img src={GEM_IMAGE[newCard.bonus]} alt={newCard.bonus} className="card-bonus-gem-icon" draggable={false} />
+              </span>
             </div>
             <div className="card-costs">
               {GEM_COLOR_LIST.map((gem) => {
                 const gemCost = newCard.cost[gem];
                 if (!gemCost || gemCost === 0) return null;
                 return (
-                  <div key={gem} className={`card-cost gem-${gem}`}>
+                  <div
+                    key={gem}
+                    className={`card-cost gem-${gem}`}
+                    style={{
+                      backgroundImage: `url(${COIN_IMAGE[gem]})`,
+                      backgroundSize: COIN_SCALE[gem],
+                      backgroundPosition: 'center',
+                    }}
+                  >
                     <span className="cost-value">{gemCost}</span>
                   </div>
                 );
@@ -363,6 +481,155 @@ function DeckToSlotCard({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// =============================================================================
+// DECK RESERVE CARD COMPONENT (flip in place at deck, then fly to player)
+// =============================================================================
+
+interface DeckReserveCardProps {
+  id: string;
+  tier: 1 | 2 | 3;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  width: number;
+  height: number;
+  scaleX: number;
+  scaleY: number;
+  card: CardDisplay;
+  onComplete: () => void;
+}
+
+function DeckReserveCard({
+  tier,
+  startX,
+  startY,
+  endX,
+  endY,
+  width,
+  height,
+  scaleX: _scaleX,
+  scaleY: _scaleY,
+  card,
+  onComplete,
+}: DeckReserveCardProps): JSX.Element {
+  const elementRef = useRef<HTMLDivElement>(null);
+  const [showFront, setShowFront] = useState(false);
+
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
+    // Initial state: at deck position, no position transition
+    element.style.left = `${startX}px`;
+    element.style.top = `${startY}px`;
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+    element.style.transform = 'translate(-50%, -50%) scale(1)';
+    element.style.opacity = '1';
+    element.style.transition = 'none';
+
+    // Phase 1: Flip to reveal card front after short paint delay
+    const flipTimeout = setTimeout(() => {
+      setShowFront(true);
+      playSound('card-flip');
+    }, 50);
+
+    // Phase 2: After flip completes (~650ms), start flying to player
+    const FLIP_DURATION = 700; // 50ms delay + 600ms flip + 50ms buffer
+    const flyTimeout = setTimeout(() => {
+      element.style.transition = [
+        `left 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`,
+        `top 1900ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`,
+        `transform 1900ms ease-in`,
+      ].join(', ');
+      element.style.left = `${endX}px`;
+      element.style.top = `${endY}px`;
+      element.style.transform = 'translate(-50%, -50%) scale(0)';
+    }, FLIP_DURATION);
+
+    // Fade out mid-flight
+    const fadeTimeout = setTimeout(() => {
+      element.style.opacity = '0';
+      element.style.transition += ', opacity 950ms ease-in';
+    }, FLIP_DURATION + 950);
+
+    // Remove after full animation
+    const completeTimeout = setTimeout(onComplete, FLIP_DURATION + 2000 + 100);
+
+    return () => {
+      clearTimeout(flipTimeout);
+      clearTimeout(flyTimeout);
+      clearTimeout(fadeTimeout);
+      clearTimeout(completeTimeout);
+    };
+  }, [startX, startY, endX, endY, width, height, onComplete]);
+
+  return (
+    <div
+      ref={elementRef}
+      className={`deck-reserve-card tier-${tier} ${showFront ? 'show-front' : ''}`}
+    >
+      {/* Card back */}
+      <div className="flip-card-back">
+        <img
+          src={`/cards/tier${tier}-back.png`}
+          alt={`Tier ${tier} card back`}
+          className="flip-card-image"
+        />
+      </div>
+
+      {/* Card front */}
+      <div
+        className="flip-card-front-wrapper"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        <div
+          className={`flip-card-front bonus-${card.bonus}`}
+          style={{
+            transform: `rotateY(${showFront ? '0deg' : '180deg'})`,
+          }}
+        >
+          <img className="card-bg-image" src={getCardImage(card.id, card.bonus, card.tier)} alt="" draggable={false} />
+          <div className="card-header">
+            <span className="card-prestige">
+              {card.prestigePoints > 0 ? card.prestigePoints : ''}
+            </span>
+            <span className={`card-bonus gem-${card.bonus}`}>
+              <img src={GEM_IMAGE[card.bonus]} alt={card.bonus} className="card-bonus-gem-icon" draggable={false} />
+            </span>
+          </div>
+          <div className="card-costs">
+            {GEM_COLOR_LIST.map((gem) => {
+              const gemCost = card.cost[gem];
+              if (!gemCost || gemCost === 0) return null;
+              return (
+                <div
+                  key={gem}
+                  className={`card-cost gem-${gem}`}
+                  style={{
+                    backgroundImage: `url(${COIN_IMAGE[gem]})`,
+                    backgroundSize: COIN_SCALE[gem],
+                    backgroundPosition: 'center',
+                  }}
+                >
+                  <span className="cost-value">{gemCost}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

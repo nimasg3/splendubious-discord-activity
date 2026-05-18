@@ -11,6 +11,7 @@ export {
   deleteRoom,
   updatePlayerStatus,
   updatePlayerName,
+  updatePlayerColor,
   getPlayer,
   getRoomBySocketId,
   getPlayerBySocketId,

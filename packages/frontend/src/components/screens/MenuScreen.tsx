@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useGame } from '../../context';
+import { SettingsMenu } from '../game/index.js';
 
 export function MenuScreen(): JSX.Element {
   const { state, createRoom, joinRoom, setLocalPlayerName } = useGame();
@@ -45,6 +46,9 @@ export function MenuScreen(): JSX.Element {
 
   return (
     <div className="menu-screen">
+      <div className="screen-settings-corner">
+        <SettingsMenu />
+      </div>
       <div className="menu-content">
         {/* Game title */}
         <div className="menu-header">

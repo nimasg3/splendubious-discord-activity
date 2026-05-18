@@ -9,6 +9,27 @@ import { GemColor } from '@splendubious/rules-engine';
 import { CardDisplay } from '../types.js';
 
 // =============================================================================
+// HELPERS
+// =============================================================================
+
+const GEM_COLOR_NAMES: Record<GemColor, string> = {
+  diamond: 'white',
+  sapphire: 'blue',
+  emerald: 'green',
+  ruby: 'red',
+  onyx: 'black',
+};
+
+const NOBLE_COLOR_ORDER: GemColor[] = ['diamond', 'sapphire', 'emerald', 'ruby', 'onyx'];
+
+function nobleImageName(requirements: Record<string, number>): string {
+  return NOBLE_COLOR_ORDER
+    .filter((gem) => (requirements[gem] ?? 0) > 0)
+    .map((gem) => `${requirements[gem]}${GEM_COLOR_NAMES[gem]}`)
+    .join('_');
+}
+
+// =============================================================================
 // TYPES
 // =============================================================================
 
@@ -58,10 +79,38 @@ interface DeckToSlotAnimation {
   newCard: CardDisplay | null; // The card to reveal after flip
 }
 
+// Animation for card reserved from deck (flip in place, then fly to player)
+interface DeckReserveAnimation {
+  id: string;
+  tier: 1 | 2 | 3;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  width: number;
+  height: number;
+  scaleX: number;
+  scaleY: number;
+  card: CardDisplay;
+}
+
+interface FlyingNoble {
+  id: string;
+  nobleId: string;
+  imageName: string;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  size: number;
+}
+
 interface AnimationContextValue {
   flyingGems: FlyingGem[];
   flyingCards: FlyingCard[];
+  flyingNobles: FlyingNoble[];
   deckToSlotAnimations: DeckToSlotAnimation[];
+  deckReserveAnimations: DeckReserveAnimation[];
   animatingSlots: Set<string>; // Set of "tier-index" keys for slots that should appear empty
   animateGemsToPlayer: (gems: GemColor[], playerId: string) => void;
   animateCardToPlayer: (cardId: string, playerId: string, animationType: 'purchase' | 'reserve', cardInfo: { bonus: GemColor; tier: 1 | 2 | 3; prestigePoints: number; cost: Partial<Record<GemColor, number>> }) => void;
@@ -70,6 +119,8 @@ interface AnimationContextValue {
   startSlotAnimation: (tier: 1 | 2 | 3, slotIndex: number, cardId: string) => void;
   triggerDeckToSlotAnimation: (tier: 1 | 2 | 3, slotIndex: number, newCard: CardDisplay | null) => void;
   removeDeckToSlotAnimation: (id: string) => void;
+  removeDeckReserveAnimation: (id: string) => void;
+  removeNobleAnimation: (id: string) => void;
   isSlotAnimating: (tier: 1 | 2 | 3, slotIndex: number) => boolean;
 }
 
@@ -81,11 +132,31 @@ type AnimationEventHandler = (gems: GemColor[], playerId: string) => void;
 type CardAnimationEventHandler = (cardId: string, playerId: string, animationType: 'purchase' | 'reserve', cardInfo: { bonus: GemColor; tier: 1 | 2 | 3; prestigePoints: number; cost: Partial<Record<GemColor, number>> }) => void;
 type SlotAnimationStartHandler = (tier: 1 | 2 | 3, slotIndex: number, cardId: string) => void;
 type DeckToSlotAnimationHandler = (tier: 1 | 2 | 3, slotIndex: number, newCard: CardDisplay | null) => void;
+type DeckReserveAnimationHandler = (tier: 1 | 2 | 3, playerId: string, card: CardDisplay) => void;
+type NobleAnimationEventHandler = (nobleId: string, playerId: string, requirements: Record<string, number>) => void;
 
 const animationEventHandlers: Set<AnimationEventHandler> = new Set();
 const cardAnimationEventHandlers: Set<CardAnimationEventHandler> = new Set();
 const slotAnimationStartHandlers: Set<SlotAnimationStartHandler> = new Set();
 const deckToSlotAnimationHandlers: Set<DeckToSlotAnimationHandler> = new Set();
+const deckReserveAnimationHandlers: Set<DeckReserveAnimationHandler> = new Set();
+const nobleAnimationEventHandlers: Set<NobleAnimationEventHandler> = new Set();
+
+// Track board noble requirements so image names can be computed at animation time
+const boardNobles: Map<string, Record<string, number>> = new Map();
+
+export function syncBoardNobleData(nobles: Array<{ id: string; requirements: Record<string, number> }>): void {
+  boardNobles.clear();
+  nobles.forEach((n) => boardNobles.set(n.id, n.requirements));
+}
+
+export function getBoardNobleIds(): Set<string> {
+  return new Set(boardNobles.keys());
+}
+
+export function triggerNobleAnimation(nobleId: string, playerId: string, requirements: Record<string, number>): void {
+  nobleAnimationEventHandlers.forEach((handler) => handler(nobleId, playerId, requirements));
+}
 
 /**
  * Trigger gem animation from anywhere in the app
@@ -100,6 +171,32 @@ const pendingCardPositions: Map<string, { x: number; y: number; width: number; h
 
 // Store pending slot info (tier + index) for cards being animated
 const pendingSlotInfo: Map<string, { tier: 1 | 2 | 3; slotIndex: number }> = new Map();
+
+// Store deck element positions for deck-reserve animations (captured before action is sent)
+const pendingDeckPositions: Map<number, { x: number; y: number; width: number; height: number }> = new Map();
+
+/**
+ * Store the deck card's position for a tier before initiating a deck-reserve action
+ */
+export function storeDeckPositionForAnimation(tier: 1 | 2 | 3): void {
+  const deckElement = document.querySelector(`.deck-card.tier-${tier}`);
+  if (deckElement) {
+    const rect = deckElement.getBoundingClientRect();
+    pendingDeckPositions.set(tier, {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      width: rect.width,
+      height: rect.height,
+    });
+  }
+}
+
+/**
+ * Trigger a deck-reserve animation (flip at deck then fly to player)
+ */
+export function triggerDeckReserveAnimation(tier: 1 | 2 | 3, playerId: string, card: CardDisplay): void {
+  deckReserveAnimationHandlers.forEach(handler => handler(tier, playerId, card));
+}
 
 /**
  * Store a card's position and slot info before initiating an action
@@ -195,7 +292,9 @@ interface AnimationProviderProps {
 export function AnimationProvider({ children }: AnimationProviderProps): JSX.Element {
   const [flyingGems, setFlyingGems] = useState<FlyingGem[]>([]);
   const [flyingCards, setFlyingCards] = useState<FlyingCard[]>([]);
-  const [deckToSlotAnimations, setDeckToSlotAnimations] = useState<DeckToSlotAnimation[]>([]);
+  const [flyingNobles, setFlyingNobles] = useState<FlyingNoble[]>([]);
+  const [deckToSlotAnimations, setDeckToSlotAnimations] = useState<DeckToSlotAnimation[]>([]);;
+  const [deckReserveAnimations, setDeckReserveAnimations] = useState<DeckReserveAnimation[]>([]);
   const [animatingSlots, setAnimatingSlots] = useState<Set<string>>(new Set());
 
   // Helper to create slot key
@@ -213,6 +312,16 @@ export function AnimationProvider({ children }: AnimationProviderProps): JSX.Ele
 
   // Trigger deck-to-slot animation
   const handleDeckToSlotAnimation = useCallback((tier: 1 | 2 | 3, slotIndex: number, newCard: CardDisplay | null) => {
+    // If there's no new card (deck was empty), just clear the animating slot without animation
+    if (!newCard) {
+      setAnimatingSlots(prev => {
+        const next = new Set(prev);
+        next.delete(slotKey(tier, slotIndex));
+        return next;
+      });
+      return;
+    }
+    
     // Find the deck and slot positions
     const deckElement = document.querySelector(`.deck-card.tier-${tier}`);
     const slotElement = document.querySelector(`[data-card-slot="${tier}-${slotIndex}"]`);
@@ -220,11 +329,6 @@ export function AnimationProvider({ children }: AnimationProviderProps): JSX.Ele
     if (deckElement && slotElement) {
       const deckRect = deckElement.getBoundingClientRect();
       const slotRect = slotElement.getBoundingClientRect();
-      
-      // Calculate the scale factor from the deck element
-      // Development cards are 130x180 in CSS, get actual rendered size ratio
-      const scaleX = deckRect.width / 130;
-      const scaleY = deckRect.height / 180;
       
       const newAnimation: DeckToSlotAnimation = {
         id: `deck-to-slot-${tier}-${slotIndex}-${Date.now()}`,
@@ -234,12 +338,10 @@ export function AnimationProvider({ children }: AnimationProviderProps): JSX.Ele
         startY: deckRect.top + deckRect.height / 2,
         endX: slotRect.left + slotRect.width / 2,
         endY: slotRect.top + slotRect.height / 2,
-        // Use actual deck dimensions for proper sizing
         width: deckRect.width,
         height: deckRect.height,
-        // Pass scale factors for content scaling
-        scaleX,
-        scaleY,
+        scaleX: 1,
+        scaleY: 1,
         phase: 'moving',
         newCard,
       };
@@ -269,6 +371,44 @@ export function AnimationProvider({ children }: AnimationProviderProps): JSX.Ele
       }
       return prev.filter(a => a.id !== id);
     });
+  }, []);
+
+  // Trigger deck-reserve animation (flip at deck then fly to player)
+  const handleDeckReserveAnimation = useCallback((tier: 1 | 2 | 3, playerId: string, card: CardDisplay) => {
+    // Use stored position if available, otherwise read from DOM now
+    const storedPos = pendingDeckPositions.get(tier);
+    pendingDeckPositions.delete(tier);
+
+    const deckElement = document.querySelector(`.deck-card.tier-${tier}`);
+    const deckRect = storedPos ? null : deckElement?.getBoundingClientRect();
+    const startX = storedPos ? storedPos.x : (deckRect ? deckRect.left + deckRect.width / 2 : 0);
+    const startY = storedPos ? storedPos.y : (deckRect ? deckRect.top + deckRect.height / 2 : 0);
+    const width = storedPos ? storedPos.width : (deckRect ? deckRect.width : 155);
+    const height = storedPos ? storedPos.height : (deckRect ? deckRect.height : 215);
+
+    const targetElement = document.querySelector(`[data-player-reserved="${playerId}"]`)
+      || document.querySelector(`[data-player-panel="${playerId}"]`);
+    const targetRect = targetElement?.getBoundingClientRect();
+    if (!targetRect) return;
+
+    const newAnim: DeckReserveAnimation = {
+      id: `deck-reserve-${tier}-${Date.now()}`,
+      tier,
+      startX,
+      startY,
+      endX: targetRect.left + targetRect.width / 2,
+      endY: targetRect.top + targetRect.height / 2,
+      width,
+      height,
+      scaleX: 1,
+      scaleY: 1,
+      card,
+    };
+    setDeckReserveAnimations(prev => [...prev, newAnim]);
+  }, []);
+
+  const removeDeckReserveAnimation = useCallback((id: string) => {
+    setDeckReserveAnimations(prev => prev.filter(a => a.id !== id));
   }, []);
 
   const animateGemsToPlayer = useCallback((gems: GemColor[], playerId: string) => {
@@ -374,8 +514,8 @@ export function AnimationProvider({ children }: AnimationProviderProps): JSX.Ele
         endY: targetRect.top + targetRect.height / 2,
         startWidth: sourceWidth || 130,
         startHeight: sourceHeight || 180,
-        endWidth: 60,     // Purchased/reserved card width
-        endHeight: 80,    // Purchased/reserved card height
+        endWidth: 60,
+        endHeight: 80,
         animationType,
       };
 
@@ -391,25 +531,61 @@ export function AnimationProvider({ children }: AnimationProviderProps): JSX.Ele
     setFlyingCards(prev => prev.filter(card => card.id !== id));
   }, []);
 
+  const animateNobleToPlayer = useCallback((nobleId: string, playerId: string, requirements: Record<string, number>) => {
+    const sourceElement = document.querySelector(`[data-noble-board="${nobleId}"]`);
+    const targetElement =
+      document.querySelector(`[data-player-nobles="${playerId}"]`) ||
+      document.querySelector(`[data-player-panel="${playerId}"]`);
+    if (!sourceElement || !targetElement) return;
+
+    const sourceRect = sourceElement.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    const imageName = nobleImageName(requirements);
+
+    setFlyingNobles((prev) => [
+      ...prev,
+      {
+        id: `noble-${nobleId}-${Date.now()}`,
+        nobleId,
+        imageName,
+        startX: sourceRect.left + sourceRect.width / 2,
+        startY: sourceRect.top + sourceRect.height / 2,
+        endX: targetRect.left + targetRect.width / 2,
+        endY: targetRect.top + targetRect.height / 2,
+        size: sourceRect.width,
+      },
+    ]);
+  }, []);
+
+  const removeNobleAnimation = useCallback((id: string) => {
+    setFlyingNobles((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
   // Register this provider's animation function to handle global events
   useEffect(() => {
     animationEventHandlers.add(animateGemsToPlayer);
     cardAnimationEventHandlers.add(animateCardToPlayer);
     slotAnimationStartHandlers.add(startSlotAnimation);
     deckToSlotAnimationHandlers.add(handleDeckToSlotAnimation);
+    deckReserveAnimationHandlers.add(handleDeckReserveAnimation);
+    nobleAnimationEventHandlers.add(animateNobleToPlayer);
     return () => {
       animationEventHandlers.delete(animateGemsToPlayer);
       cardAnimationEventHandlers.delete(animateCardToPlayer);
       slotAnimationStartHandlers.delete(startSlotAnimation);
       deckToSlotAnimationHandlers.delete(handleDeckToSlotAnimation);
+      deckReserveAnimationHandlers.delete(handleDeckReserveAnimation);
+      nobleAnimationEventHandlers.delete(animateNobleToPlayer);
     };
-  }, [animateGemsToPlayer, animateCardToPlayer, startSlotAnimation, handleDeckToSlotAnimation]);
+  }, [animateGemsToPlayer, animateCardToPlayer, startSlotAnimation, handleDeckToSlotAnimation, handleDeckReserveAnimation, animateNobleToPlayer]);
 
   return (
     <AnimationContext.Provider value={{ 
       flyingGems, 
       flyingCards,
+      flyingNobles,
       deckToSlotAnimations,
+      deckReserveAnimations,
       animatingSlots,
       animateGemsToPlayer, 
       animateCardToPlayer,
@@ -418,6 +594,8 @@ export function AnimationProvider({ children }: AnimationProviderProps): JSX.Ele
       startSlotAnimation,
       triggerDeckToSlotAnimation: handleDeckToSlotAnimation,
       removeDeckToSlotAnimation,
+      removeDeckReserveAnimation,
+      removeNobleAnimation,
       isSlotAnimating,
     }}>
       {children}

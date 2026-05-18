@@ -9,3 +9,5 @@ export { DevelopmentCard, DeckCard } from './DevelopmentCard.js';
 export { NobleTile } from './NobleTile.js';
 export { GemToken } from './GemToken.js';
 export { FlyingGems } from './FlyingGems.js';
+export { MoveLog } from './MoveLog.js';
+export { SettingsMenu } from './SettingsMenu.js';

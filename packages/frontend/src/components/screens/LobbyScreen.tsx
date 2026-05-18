@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lobby Screen Component
  *
  * Pre-game lobby showing players and game settings.
@@ -6,10 +6,19 @@
 
 import { useState } from 'react';
 import { useGame } from '../../context';
+import { SettingsMenu } from '../game/index.js';
+
+const PLAYER_COLORS = [
+  { label: 'Red',    value: '#c0392b' },
+  { label: 'Blue',   value: '#2471a3' },
+  { label: 'Green',  value: '#1e8449' },
+  { label: 'Yellow', value: '#d4ac0d' },
+  { label: 'Purple', value: '#7d3c98' },
+  { label: 'Orange', value: '#ca6f1e' },
+];
 
 export function LobbyScreen(): JSX.Element {
-  const { state, startGame, leaveRoom, updatePlayerName } = useGame();
-  const [playerCount, setPlayerCount] = useState<2 | 3 | 4>(2);
+  const { state, startGame, leaveRoom, updatePlayerName, updatePlayerColor } = useGame();
   const [isStarting, setIsStarting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -20,7 +29,7 @@ export function LobbyScreen(): JSX.Element {
   const handleStartGame = async () => {
     setIsStarting(true);
     try {
-      await startGame(playerCount);
+      await startGame(activePlayers);
     } catch (error) {
       console.error('Failed to start game:', error);
     } finally {
@@ -70,6 +79,14 @@ export function LobbyScreen(): JSX.Element {
     setEditedName('');
   };
 
+  const handleColorChange = async (color: string) => {
+    try {
+      await updatePlayerColor(color);
+    } catch (error) {
+      console.error('Failed to update color:', error);
+    }
+  };
+
   if (!room) {
     return (
       <div className="lobby-screen">
@@ -78,17 +95,27 @@ export function LobbyScreen(): JSX.Element {
     );
   }
 
-  const canStart = isHost && room.players.filter(p => !p.isSpectator).length >= playerCount;
+  const activePlayers = room.players.filter(p => !p.isSpectator).length;
+  const canStart = isHost && activePlayers >= 2 && activePlayers <= 4;
+
+  // Colors taken by other players
+  const myPlayer = room.players.find(p => p.id === user?.id);
+  const takenColors = new Set(
+    room.players.filter(p => p.id !== user?.id).map(p => p.color)
+  );
 
   return (
     <div className="lobby-screen">
+      <div className="screen-settings-corner">
+        <SettingsMenu />
+      </div>
       <div className="lobby-content">
         {/* Room header */}
         <div className="lobby-header">
           <h2>Game Lobby</h2>
           <div className="room-code-section">
             <span className="room-code-label">Room Code:</span>
-            <span className="room-code">{room.id}</span>
+            <span className="room-code" style={{ fontFamily: 'monospace' }}>{room.id}</span>
             <button 
               className="btn btn-small btn-secondary"
               onClick={handleCopyCode}
@@ -100,78 +127,84 @@ export function LobbyScreen(): JSX.Element {
 
         {/* Players list */}
         <div className="players-section">
-          <h3>Players ({room.players.filter(p => !p.isSpectator).length}/{playerCount})</h3>
+          <h3>Players ({activePlayers}/4)</h3>
           <ul className="players-list">
-            {room.players.map((player) => (
-              <li 
-                key={player.id} 
-                className={`player-item ${player.id === user?.id ? 'local' : ''} ${player.isSpectator ? 'spectator' : ''}`}
-              >
-                <span className="player-name">
-                  {player.id === user?.id && isEditingName ? (
-                    <span className="name-edit-container">
-                      <input
-                        type="text"
-                        className="name-input"
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveName();
-                          if (e.key === 'Escape') handleCancelEditName();
-                        }}
-                        autoFocus
-                        maxLength={20}
-                      />
-                      <button className="btn btn-tiny btn-primary" onClick={handleSaveName}>✓</button>
-                      <button className="btn btn-tiny btn-secondary" onClick={handleCancelEditName}>✗</button>
-                    </span>
+            {room.players.map((player) => {
+              const isMe = player.id === user?.id;
+              return (
+                <li 
+                  key={player.id} 
+                  className={`player-item ${isMe ? 'local' : ''} ${player.isSpectator ? 'spectator' : ''}`}
+                >
+                  <span className="player-name">
+                    {isMe && isEditingName ? (
+                      <span className="name-edit-container">
+                        <input
+                          type="text"
+                          className="name-input"
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveName();
+                            if (e.key === 'Escape') handleCancelEditName();
+                          }}
+                          autoFocus
+                          maxLength={20}
+                        />
+                        <button className="btn btn-tiny btn-primary" onClick={handleSaveName}>✓</button>
+                        <button className="btn btn-tiny btn-secondary" onClick={handleCancelEditName}>✗</button>
+                      </span>
+                    ) : (
+                      <>
+                        {player.name}
+                        {player.id === room.hostId && <span className="host-badge">Host</span>}
+                        {isMe && (
+                          <>
+                            <span className="you-badge">You</span>
+                            <button 
+                              className="btn btn-tiny btn-secondary edit-name-btn"
+                              onClick={handleStartEditName}
+                              title="Edit name"
+                            >
+                              ✎
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </span>
+
+                  {/* Color picker — editable only for local player */}
+                  {isMe ? (
+                    <div className="player-color-picker">
+                      {PLAYER_COLORS.map(({ label, value }) => {
+                        const taken = takenColors.has(value);
+                        const selected = myPlayer?.color === value;
+                        return (
+                          <button
+                            key={value}
+                            className={`color-swatch ${selected ? 'selected' : ''} ${taken ? 'taken' : ''}`}
+                            style={{ backgroundColor: value }}
+                            title={taken ? `${label} (taken)` : label}
+                            disabled={taken}
+                            onClick={() => !taken && handleColorChange(value)}
+                            aria-label={label}
+                          />
+                        );
+                      })}
+                    </div>
                   ) : (
-                    <>
-                      {player.name}
-                      {player.id === room.hostId && <span className="host-badge">Host</span>}
-                      {player.id === user?.id && (
-                        <>
-                          <span className="you-badge">You</span>
-                          <button 
-                            className="btn btn-tiny btn-secondary edit-name-btn"
-                            onClick={handleStartEditName}
-                            title="Edit name"
-                          >
-                            ✎
-                          </button>
-                        </>
-                      )}
-                    </>
+                    <div
+                      className="player-color-dot"
+                      style={{ backgroundColor: player.color }}
+                      title={PLAYER_COLORS.find(c => c.value === player.color)?.label ?? player.color}
+                    />
                   )}
-                </span>
-                <span className={`player-status status-${player.status}`}>
-                  {player.status === 'connected' ? '●' : '○'}
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </div>
-
-        {/* Game settings (host only) */}
-        {isHost && (
-          <div className="settings-section">
-            <h3>Game Settings</h3>
-            <div className="player-count-selector">
-              <label>Number of Players:</label>
-              <div className="count-buttons">
-                {([2, 3, 4] as const).map((count) => (
-                  <button
-                    key={count}
-                    className={`btn btn-count ${playerCount === count ? 'active' : ''}`}
-                    onClick={() => setPlayerCount(count)}
-                  >
-                    {count}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Not host message */}
         {!isHost && (
@@ -195,15 +228,20 @@ export function LobbyScreen(): JSX.Element {
               onClick={handleStartGame}
               disabled={!canStart || isStarting}
             >
-              {isStarting ? 'Starting...' : `Start Game (${room.players.filter(p => !p.isSpectator).length}/${playerCount} players)`}
+              {isStarting ? 'Starting...' : `Start Game (${activePlayers} players)`}
             </button>
           )}
         </div>
 
         {/* Waiting for players message */}
-        {isHost && !canStart && (
+        {isHost && activePlayers < 2 && (
           <p className="waiting-message">
-            Waiting for {playerCount - room.players.filter(p => !p.isSpectator).length} more player(s)...
+            Waiting for {2 - activePlayers} more player(s)...
+          </p>
+        )}
+        {isHost && activePlayers > 4 && (
+          <p className="waiting-message" style={{ color: 'var(--error)' }}>
+            Too many players — maximum is 4.
           </p>
         )}
       </div>

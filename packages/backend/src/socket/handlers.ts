@@ -18,6 +18,7 @@ import {
   getRoom,
   updatePlayerStatus,
   updatePlayerName,
+  updatePlayerColor,
   toRoomDTO,
 } from '../rooms/index.js';
 import {
@@ -123,7 +124,9 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
     // If game is in progress, send current game state to joining player
     const gameState = getGameState(data.roomId);
     if (gameState) {
-      const clientState = toClientGameState(gameState, playerId);
+      const joinedRoom = getRoom(data.roomId);
+      const playerColors = joinedRoom ? Object.fromEntries(joinedRoom.players.map(p => [p.id, p.color])) : {};
+      const clientState = { ...toClientGameState(gameState, playerId), playerColors };
       socket.emit('game:state_updated', clientState);
     }
   });
@@ -176,6 +179,26 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
     // Broadcast updated room to all players in the room (including sender)
     io.to(roomId).emit('room:updated', toRoomDTO(room));
     
+    callback({ success: true });
+  });
+
+  // Update player color
+  socket.on('room:update_color', (data, callback) => {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) {
+      callback({ success: false, error: 'Not in a room' });
+      return;
+    }
+
+    const room = updatePlayerColor(roomId, playerId, data.color);
+
+    if (!room) {
+      callback({ success: false, error: 'Color already taken or room not found' });
+      return;
+    }
+
+    io.to(roomId).emit('room:updated', toRoomDTO(room));
     callback({ success: true });
   });
 
@@ -303,11 +326,13 @@ export function broadcastRoomUpdate(io: GameServer, roomId: string): void {
 export function broadcastGameStarted(io: GameServer, roomId: string): void {
   const room = getRoom(roomId);
   if (!room?.gameState) return;
-  
+
+  const playerColors = Object.fromEntries(room.players.map(p => [p.id, p.color]));
+
   // For each connected player, create personalized state and send game:started
   for (const player of room.players) {
     if (player.socketId && player.status === 'connected') {
-      const clientState = toClientGameState(room.gameState, player.id);
+      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors };
       io.to(player.socketId).emit('game:started', clientState);
     }
   }
@@ -319,11 +344,13 @@ export function broadcastGameStarted(io: GameServer, roomId: string): void {
 export function broadcastGameState(io: GameServer, roomId: string): void {
   const room = getRoom(roomId);
   if (!room?.gameState) return;
-  
+
+  const playerColors = Object.fromEntries(room.players.map(p => [p.id, p.color]));
+
   // For each connected player, create personalized state and send
   for (const player of room.players) {
     if (player.socketId && player.status === 'connected') {
-      const clientState = toClientGameState(room.gameState, player.id);
+      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors };
       io.to(player.socketId).emit('game:state_updated', clientState);
     }
   }
@@ -335,11 +362,13 @@ export function broadcastGameState(io: GameServer, roomId: string): void {
 export function broadcastActionApplied(io: GameServer, roomId: string, action: import('@splendubious/rules-engine').PlayerAction): void {
   const room = getRoom(roomId);
   if (!room?.gameState) return;
-  
+
+  const playerColors = Object.fromEntries(room.players.map(p => [p.id, p.color]));
+
   // For each connected player, send action applied with personalized state
   for (const player of room.players) {
     if (player.socketId && player.status === 'connected') {
-      const clientState = toClientGameState(room.gameState, player.id);
+      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors };
       io.to(player.socketId).emit('game:action_applied', action, clientState);
     }
   }
@@ -354,10 +383,12 @@ export function sendGameStateToPlayer(
   playerId: string,
   socketId: string
 ): void {
+  const room = getRoom(roomId);
   const gameState = getGameState(roomId);
   if (!gameState) return;
-  
-  const clientState = toClientGameState(gameState, playerId);
+
+  const playerColors = room ? Object.fromEntries(room.players.map(p => [p.id, p.color])) : {};
+  const clientState = { ...toClientGameState(gameState, playerId), playerColors };
   io.to(socketId).emit('game:state_updated', clientState);
 }
 

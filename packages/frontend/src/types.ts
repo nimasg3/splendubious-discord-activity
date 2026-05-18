@@ -26,6 +26,7 @@ export type RoomStatus = 'lobby' | 'playing' | 'ended';
 export interface PlayerDTO {
   id: string;
   name: string;
+  color: string;
   status: ConnectionStatus;
   isSpectator: boolean;
 }
@@ -64,6 +65,9 @@ export interface ClientGameState {
     tier3: number;
   };
   availableActions?: AvailableActions;
+
+  /** Player colors keyed by player ID */
+  playerColors: Record<string, string>;
 }
 
 /**

@@ -6,8 +6,9 @@
 
 import { GemColor } from '@splendubious/rules-engine';
 import { ClientPlayerState } from '../../types';
-import { GemToken } from './GemToken';
+import { GemToken, COIN_IMAGE, COIN_SCALE } from './GemToken';
 import { NobleTile } from './NobleTile';
+import { GEM_IMAGE, getCardImage } from './DevelopmentCard';
 import { useGame } from '../../context';
 
 const GEM_COLORS: GemColor[] = ['emerald', 'diamond', 'sapphire', 'onyx', 'ruby'];
@@ -58,6 +59,7 @@ export function PlayerPanel({
   
   // Get selected discard count for a gem color
   const getSelectedDiscardCount = (color: GemColor | 'gold'): number => {
+    if (!isLocalPlayer) return 0;
     if (selectedAction.type !== 'discard_gems') return 0;
     return selectedAction.gems[color] || 0;
   };
@@ -100,9 +102,13 @@ export function PlayerPanel({
   // Calculate total gems for local player display
   const totalGems = Object.values(player.gems).reduce((sum, count) => sum + count, 0);
 
+  // Player color from game state playerColors map
+  const playerColor = gameState?.playerColors?.[player.id];
+
   return (
     <div 
       className={`player-panel ${isCurrentPlayer ? 'current-turn' : ''} ${isLocalPlayer ? 'local-player' : ''} position-${position}`}
+      style={playerColor ? { '--player-color': playerColor } as React.CSSProperties : undefined}
       data-player-panel={player.id}
     >
       {/* Player header */}
@@ -167,18 +173,29 @@ export function PlayerPanel({
                         className={`purchased-card tier-${card.tier}`}
                         style={{ marginTop: index > 0 ? '-55px' : 0, zIndex: index }}
                       >
+                        <img className="card-bg-image" src={getCardImage(card.id, card.bonus, card.tier)} alt="" draggable={false} />
                         <div className="purchased-card-header">
                           {card.prestigePoints > 0 && (
                             <span className="card-prestige">{card.prestigePoints}</span>
                           )}
-                          <span className={`card-bonus gem-${card.bonus}`} />
+                          <span className={`card-bonus gem-${card.bonus}`}>
+                            <img src={GEM_IMAGE[card.bonus]} alt={card.bonus} className="card-bonus-gem-icon" draggable={false} />
+                          </span>
                         </div>
                         <div className="purchased-card-cost">
                           {GEM_COLORS.map((gem) => {
                             const cost = card.cost[gem];
                             if (!cost || cost === 0) return null;
                             return (
-                              <span key={gem} className={`cost-pip gem-${gem}`}>{cost}</span>
+                              <span
+                                key={gem}
+                                className={`cost-pip gem-${gem}`}
+                                style={{
+                                  backgroundImage: `url(${COIN_IMAGE[gem]})`,
+                                  backgroundSize: COIN_SCALE[gem],
+                                  backgroundPosition: 'center',
+                                }}
+                              >{cost}</span>
                             );
                           })}
                         </div>
@@ -237,16 +254,27 @@ export function PlayerPanel({
                     role={canPurchase ? 'button' : undefined}
                     tabIndex={canPurchase ? 0 : undefined}
                   >
+                    <img className="card-bg-image" src={getCardImage(card.id, card.bonus, card.tier)} alt="" draggable={false} />
                     <div className="reserved-card-header">
                       {card.prestigePoints > 0 && <span className="card-prestige">{card.prestigePoints}</span>}
-                      <span className={`card-bonus gem-${card.bonus}`} />
+                      <span className={`card-bonus gem-${card.bonus}`}>
+                        <img src={GEM_IMAGE[card.bonus]} alt={card.bonus} className="card-bonus-gem-icon" draggable={false} />
+                      </span>
                     </div>
                     <div className="reserved-card-cost">
                       {GEM_COLORS.map((gem) => {
                         const cost = card.cost[gem];
                         if (!cost || cost === 0) return null;
                         return (
-                          <span key={gem} className={`cost-pip gem-${gem}`}>{cost}</span>
+                          <span
+                            key={gem}
+                            className={`cost-pip gem-${gem}`}
+                            style={{
+                              backgroundImage: `url(${COIN_IMAGE[gem]})`,
+                              backgroundSize: COIN_SCALE[gem],
+                              backgroundPosition: 'center',
+                            }}
+                          >{cost}</span>
                         );
                       })}
                     </div>
@@ -259,22 +287,24 @@ export function PlayerPanel({
         </div>
       </div>
 
-      {/* Nobles */}
-      {player.nobles.length > 0 && (
-        <div className="player-nobles">
-          <div className="section-label">Nobles</div>
-          <div className="nobles-row">
-            {player.nobles.map((noble) => (
-              <NobleTile
-                key={noble.id}
-                noble={noble}
-                isEligible={false}
-                size="small"
-              />
-            ))}
+      {/* Nobles - wrapper always present for animation targeting */}
+      <div className="player-nobles-wrapper" data-player-nobles={player.id}>
+        {player.nobles.length > 0 && (
+          <div className="player-nobles">
+            <div className="section-label">Nobles</div>
+            <div className="nobles-row">
+              {player.nobles.map((noble) => (
+                <NobleTile
+                  key={noble.id}
+                  noble={noble}
+                  isEligible={false}
+                  size="small"
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

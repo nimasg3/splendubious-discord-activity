@@ -20,6 +20,7 @@ interface ClientToServerEvents {
   ) => void;
   'room:leave': (callback: SuccessCallback) => void;
   'room:update_name': (data: { name: string }, callback: SuccessCallback) => void;
+  'room:update_color': (data: { color: string }, callback: SuccessCallback) => void;
   'room:start': (
     data: { config: { playerCount: 2 | 3 | 4 } },
     callback: SuccessCallback
@@ -206,6 +207,26 @@ export async function updatePlayerName(name: string): Promise<void> {
         resolve();
       } else {
         reject(new Error(response.error || 'Failed to update name'));
+      }
+    });
+  });
+}
+
+/**
+ * Updates the player's chosen color
+ */
+export async function updatePlayerColor(color: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (!socket) {
+      reject(new Error('Not connected to server'));
+      return;
+    }
+
+    socket.emit('room:update_color', { color }, (response) => {
+      if (response.success) {
+        resolve();
+      } else {
+        reject(new Error(response.error || 'Failed to update color'));
       }
     });
   });

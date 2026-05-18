@@ -5,11 +5,14 @@
  */
 
 import { useGame } from '../../context';
-import { GameBoard, PlayerPanel } from '../game';
+import { GameBoard, PlayerPanel, SettingsMenu } from '../game';
+import { useSoundEffects } from '../../hooks/useSoundEffects.js';
 
 export function GameScreen(): JSX.Element {
   const { state, isMyTurn, clearSelection, leaveRoom } = useGame();
   const { gameState, user, selectedAction } = state;
+
+  useSoundEffects();
 
   // Handle right-click to clear selection
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -57,6 +60,7 @@ export function GameScreen(): JSX.Element {
     >
       {/* Game status banner */}
       <div className="game-status-banner">
+        <SettingsMenu />
         {isGameEnded ? (
           <div className="game-ended">
             <span className="trophy">🏆</span>

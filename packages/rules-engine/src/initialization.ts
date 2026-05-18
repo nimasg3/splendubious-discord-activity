@@ -16,7 +16,7 @@ import {
   INITIAL_GEM_COUNTS,
   GAME_CONSTANTS,
 } from './types.js';
-import { getCardsByTier, getAllNobles } from './data/index.js';
+import { getCardsByTier, getAllNobles, TEST_OVERRIDES } from './data/index.js';
 
 // =============================================================================
 // INITIALIZATION FUNCTIONS
@@ -129,6 +129,11 @@ export function createInitialMarket(decks: CardDecks): { market: CardMarket; rem
  */
 export function selectNobles(playerCount: 2 | 3 | 4, randomFn?: () => number): Noble[] {
   const allNobles = getAllNobles();
+  if (TEST_OVERRIDES) {
+    const testNoble = allNobles.find((n) => n.id === 'noble_04')!;
+    const rest = shuffleArray(allNobles.filter((n) => n.id !== 'noble_04'), randomFn);
+    return [testNoble, ...rest.slice(0, playerCount)];
+  }
   const shuffled = shuffleArray(allNobles, randomFn);
   return shuffled.slice(0, playerCount + 1);
 }

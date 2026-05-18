@@ -23,6 +23,8 @@ export interface RoomPlayer {
   id: string;
   /** Display name */
   name: string;
+  /** Chosen player color (hex) */
+  color: string;
   /** Socket ID for communication */
   socketId: string | null;
   /** Connection status */
@@ -73,6 +75,7 @@ export interface ClientToServerEvents {
   'room:join': (data: JoinRoomData, callback: RoomCallback) => void;
   'room:leave': (callback: SuccessCallback) => void;
   'room:update_name': (data: UpdateNameData, callback: SuccessCallback) => void;
+  'room:update_color': (data: UpdateColorData, callback: SuccessCallback) => void;
   'room:start': (data: StartGameData, callback: SuccessCallback) => void;
 
   // Game actions
@@ -139,6 +142,7 @@ export interface RoomStateDTO {
 export interface PlayerDTO {
   id: string;
   name: string;
+  color: string;
   status: ConnectionStatus;
   isSpectator: boolean;
 }
@@ -170,6 +174,9 @@ export interface ClientGameState {
 
   /** Actions available to the requesting player */
   availableActions?: import('@splendubious/rules-engine').AvailableActions;
+
+  /** Player colors keyed by player ID */
+  playerColors: Record<string, string>;
 }
 
 /**
@@ -204,6 +211,10 @@ export interface JoinRoomData {
 
 export interface UpdateNameData {
   name: string;
+}
+
+export interface UpdateColorData {
+  color: string;
 }
 
 export interface StartGameData {
