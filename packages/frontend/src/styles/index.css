@@ -108,6 +108,9 @@ button {
   align-items: center;
   justify-content: center;
   padding: var(--spacing-md);
+  background-image: url('/menu_background.png');
+  background-size: cover;
+  background-position: center;
 }
 
 .lobby-screen {

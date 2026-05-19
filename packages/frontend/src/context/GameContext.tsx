@@ -244,11 +244,9 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
   useEffect(() => {
     // Connect to server:
     // - Inside Discord: route through Activity proxy (/api → App Runner)
-    // - Outside Discord: use VITE_SOCKET_URL or localhost directly
+    // - Outside Discord: use window.location.origin so Vite proxy handles it in dev
     const isEmbedded = window.self !== window.top;
-    const serverUrl = isEmbedded
-      ? window.location.origin
-      : (import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001');
+    const serverUrl = window.location.origin;
     const socketPath = isEmbedded ? '/api/socket.io' : '/socket.io';
     socketClient.connect(serverUrl, socketPath);
     
