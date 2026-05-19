@@ -23,4 +23,5 @@ export {
   getOrCreateChannelRoom,
   findRoomByChannelId,
   resetChannelRoomIfEmpty,
+  switchPlayerRole,
 } from './roomManager.js';

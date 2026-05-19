@@ -17,12 +17,15 @@ const PLAYER_COLORS = [
   { label: 'Orange', value: '#ca6f1e' },
 ];
 
+const MAX_PLAYERS = 4;
+const MAX_SPECTATORS = 4;
+
 function getDiscordAvatarUrl(userId: string, avatarHash: string): string {
   return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.png?size=64`;
 }
 
 export function LobbyScreen(): JSX.Element {
-  const { state, startGame, leaveRoom, updatePlayerName, updatePlayerColor } = useGame();
+  const { state, startGame, leaveRoom, updatePlayerName, updatePlayerColor, switchRole } = useGame();
   const [isStarting, setIsStarting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -33,7 +36,7 @@ export function LobbyScreen(): JSX.Element {
   const handleStartGame = async () => {
     setIsStarting(true);
     try {
-      await startGame(activePlayers as 2 | 3 | 4);
+      await startGame(players.length as 2 | 3 | 4);
     } catch (error) {
       console.error('Failed to start game:', error);
     } finally {
@@ -68,7 +71,7 @@ export function LobbyScreen(): JSX.Element {
   };
 
   const handleSaveName = async () => {
-    if (editedName.trim() && editedName.trim() !== user?.globalName) {
+    if (editedName.trim()) {
       try {
         await updatePlayerName(editedName.trim());
       } catch (error) {
@@ -91,6 +94,14 @@ export function LobbyScreen(): JSX.Element {
     }
   };
 
+  const handleSwitchRole = async (asSpectator: boolean) => {
+    try {
+      await switchRole(asSpectator);
+    } catch (error) {
+      console.error('Failed to switch role:', error);
+    }
+  };
+
   if (!room) {
     return (
       <div className="lobby-screen">
@@ -99,14 +110,119 @@ export function LobbyScreen(): JSX.Element {
     );
   }
 
-  const activePlayers = room.players.filter(p => !p.isSpectator).length;
-  const canStart = isHost && activePlayers >= 2 && activePlayers <= 4;
+  const players    = room.players.filter(p => !p.isSpectator);
+  const spectators = room.players.filter(p => p.isSpectator);
+  const myPlayer   = room.players.find(p => p.id === user?.id);
+  const amSpectator = myPlayer?.isSpectator ?? false;
+  const canStart = isHost && players.length >= 2 && players.length <= 4;
 
-  // Colors taken by other players
-  const myPlayer = room.players.find(p => p.id === user?.id);
   const takenColors = new Set(
-    room.players.filter(p => p.id !== user?.id).map(p => p.color)
+    players.filter(p => p.id !== user?.id).map(p => p.color)
   );
+
+  // Render a single filled player slot
+  const renderPlayerSlot = (player: typeof players[0]) => {
+    const isMe = player.id === user?.id;
+    return (
+      <li key={player.id} className={`lobby-slot filled ${isMe ? 'local' : ''}`}>
+        <div className="slot-identity">
+          {player.avatarHash && (
+            <img
+              className="player-avatar"
+              src={getDiscordAvatarUrl(player.id, player.avatarHash)}
+              alt={player.name}
+            />
+          )}
+          <span className="slot-name">
+            {isMe && isEditingName ? (
+              <span className="name-edit-container">
+                <input
+                  type="text"
+                  className="name-input"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') handleCancelEditName();
+                  }}
+                  autoFocus
+                  maxLength={20}
+                />
+                <button className="btn btn-tiny btn-primary" onClick={handleSaveName}>✓</button>
+                <button className="btn btn-tiny btn-secondary" onClick={handleCancelEditName}>✗</button>
+              </span>
+            ) : (
+              <>
+                {player.name}
+                {player.id === room.hostId && <span className="host-badge">Host</span>}
+                {isMe && (
+                  <>
+                    <span className="you-badge">You</span>
+                    <button
+                      className="btn btn-tiny btn-secondary edit-name-btn"
+                      onClick={handleStartEditName}
+                      title="Edit name"
+                    >
+                      ✎
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </span>
+        </div>
+
+        {/* Color picker for self; read-only dot for others */}
+        {isMe ? (
+          <div className="player-color-picker">
+            {PLAYER_COLORS.map(({ label, value }) => {
+              const taken = takenColors.has(value);
+              const selected = myPlayer?.color === value;
+              return (
+                <button
+                  key={value}
+                  className={`color-swatch ${selected ? 'selected' : ''} ${taken ? 'taken' : ''}`}
+                  style={{ backgroundColor: value }}
+                  title={taken ? `${label} (taken)` : label}
+                  disabled={taken}
+                  onClick={() => !taken && handleColorChange(value)}
+                  aria-label={label}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div
+            className="player-color-dot"
+            style={{ backgroundColor: player.color }}
+            title={PLAYER_COLORS.find(c => c.value === player.color)?.label ?? player.color}
+          />
+        )}
+      </li>
+    );
+  };
+
+  // Render a single filled spectator slot
+  const renderSpectatorSlot = (spectator: typeof spectators[0]) => {
+    const isMe = spectator.id === user?.id;
+    return (
+      <li key={spectator.id} className={`lobby-slot filled ${isMe ? 'local' : ''}`}>
+        <div className="slot-identity">
+          {spectator.avatarHash && (
+            <img
+              className="player-avatar"
+              src={getDiscordAvatarUrl(spectator.id, spectator.avatarHash)}
+              alt={spectator.name}
+            />
+          )}
+          <span className="slot-name">
+            {spectator.name}
+            {isMe && <span className="you-badge">You</span>}
+          </span>
+        </div>
+      </li>
+    );
+  };
 
   return (
     <div className="lobby-screen">
@@ -120,7 +236,7 @@ export function LobbyScreen(): JSX.Element {
           <div className="room-code-section">
             <span className="room-code-label">Room Code:</span>
             <span className="room-code" style={{ fontFamily: 'monospace' }}>{room.id}</span>
-            <button 
+            <button
               className="btn btn-small btn-secondary"
               onClick={handleCopyCode}
             >
@@ -129,92 +245,78 @@ export function LobbyScreen(): JSX.Element {
           </div>
         </div>
 
-        {/* Players list */}
-        <div className="players-section">
-          <h3>Players ({activePlayers}/4)</h3>
-          <ul className="players-list">
-            {room.players.map((player) => {
-              const isMe = player.id === user?.id;
-              return (
-                <li 
-                  key={player.id} 
-                  className={`player-item ${isMe ? 'local' : ''} ${player.isSpectator ? 'spectator' : ''}`}
-                >
-                  {player.avatarHash && (
-                    <img
-                      className="player-avatar"
-                      src={getDiscordAvatarUrl(player.id, player.avatarHash)}
-                      alt={player.name}
-                    />
-                  )}
-                  <span className="player-name">
-                    {isMe && isEditingName ? (
-                      <span className="name-edit-container">
-                        <input
-                          type="text"
-                          className="name-input"
-                          value={editedName}
-                          onChange={(e) => setEditedName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveName();
-                            if (e.key === 'Escape') handleCancelEditName();
-                          }}
-                          autoFocus
-                          maxLength={20}
-                        />
-                        <button className="btn btn-tiny btn-primary" onClick={handleSaveName}>✓</button>
-                        <button className="btn btn-tiny btn-secondary" onClick={handleCancelEditName}>✗</button>
-                      </span>
-                    ) : (
-                      <>
-                        {player.name}
-                        {player.id === room.hostId && <span className="host-badge">Host</span>}
-                        {isMe && (
-                          <>
-                            <span className="you-badge">You</span>
-                            <button 
-                              className="btn btn-tiny btn-secondary edit-name-btn"
-                              onClick={handleStartEditName}
-                              title="Edit name"
-                            >
-                              ✎
-                            </button>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </span>
+        <div className="lobby-sections">
+          {/* Players section */}
+          <div className="lobby-section">
+            <h3 className="section-heading">
+              <span className="section-icon">♟</span>
+              Players
+              <span className="section-count">{players.length}/{MAX_PLAYERS}</span>
+            </h3>
+            <ul className="lobby-slots-list">
+              {players.map(renderPlayerSlot)}
 
-                  {/* Color picker — editable only for local player */}
-                  {isMe ? (
-                    <div className="player-color-picker">
-                      {PLAYER_COLORS.map(({ label, value }) => {
-                        const taken = takenColors.has(value);
-                        const selected = myPlayer?.color === value;
-                        return (
-                          <button
-                            key={value}
-                            className={`color-swatch ${selected ? 'selected' : ''} ${taken ? 'taken' : ''}`}
-                            style={{ backgroundColor: value }}
-                            title={taken ? `${label} (taken)` : label}
-                            disabled={taken}
-                            onClick={() => !taken && handleColorChange(value)}
-                            aria-label={label}
-                          />
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div
-                      className="player-color-dot"
-                      style={{ backgroundColor: player.color }}
-                      title={PLAYER_COLORS.find(c => c.value === player.color)?.label ?? player.color}
-                    />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+              {/* Empty slots */}
+              {Array.from({ length: MAX_PLAYERS - players.length }).map((_, i) => {
+                const isJoinSlot = i === 0 && amSpectator;
+                return (
+                  <li
+                    key={`empty-player-${i}`}
+                    className={`lobby-slot empty ${isJoinSlot ? 'join-slot' : ''}`}
+                    onClick={isJoinSlot ? () => handleSwitchRole(false) : undefined}
+                    role={isJoinSlot ? 'button' : undefined}
+                    tabIndex={isJoinSlot ? 0 : undefined}
+                    onKeyDown={isJoinSlot ? (e) => e.key === 'Enter' && handleSwitchRole(false) : undefined}
+                  >
+                    {isJoinSlot ? (
+                      <>
+                        <span className="plus-icon">+</span>
+                        <span className="join-label">Join as Player</span>
+                      </>
+                    ) : (
+                      <span className="empty-slot-dash">—</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Spectators section */}
+          <div className="lobby-section">
+            <h3 className="section-heading">
+              <span className="section-icon">👁</span>
+              Spectators
+              <span className="section-count">{spectators.length}/{MAX_SPECTATORS}</span>
+            </h3>
+            <ul className="lobby-slots-list">
+              {spectators.map(renderSpectatorSlot)}
+
+              {/* Empty slots */}
+              {Array.from({ length: MAX_SPECTATORS - spectators.length }).map((_, i) => {
+                const isJoinSlot = i === 0 && !amSpectator;
+                return (
+                  <li
+                    key={`empty-spectator-${i}`}
+                    className={`lobby-slot empty ${isJoinSlot ? 'join-slot' : ''}`}
+                    onClick={isJoinSlot ? () => handleSwitchRole(true) : undefined}
+                    role={isJoinSlot ? 'button' : undefined}
+                    tabIndex={isJoinSlot ? 0 : undefined}
+                    onKeyDown={isJoinSlot ? (e) => e.key === 'Enter' && handleSwitchRole(true) : undefined}
+                  >
+                    {isJoinSlot ? (
+                      <>
+                        <span className="plus-icon">+</span>
+                        <span className="join-label">Join as Spectator</span>
+                      </>
+                    ) : (
+                      <span className="empty-slot-dash">—</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
 
         {/* Not host message */}
@@ -226,31 +328,30 @@ export function LobbyScreen(): JSX.Element {
 
         {/* Actions */}
         <div className="lobby-actions">
-          <button 
+          <button
             className="btn btn-secondary"
             onClick={handleLeave}
           >
             Leave Lobby
           </button>
-          
+
           {isHost && (
-            <button 
+            <button
               className="btn btn-primary"
               onClick={handleStartGame}
               disabled={!canStart || isStarting}
             >
-              {isStarting ? 'Starting...' : `Start Game (${activePlayers} players)`}
+              {isStarting ? 'Starting...' : `Start Game (${players.length} players)`}
             </button>
           )}
         </div>
 
-        {/* Waiting for players message */}
-        {isHost && activePlayers < 2 && (
+        {isHost && players.length < 2 && (
           <p className="waiting-message">
-            Waiting for {2 - activePlayers} more player(s)...
+            Need at least {2 - players.length} more player(s) to start.
           </p>
         )}
-        {isHost && activePlayers > 4 && (
+        {isHost && players.length > 4 && (
           <p className="waiting-message" style={{ color: 'var(--error)' }}>
             Too many players — maximum is 4.
           </p>
@@ -259,3 +360,4 @@ export function LobbyScreen(): JSX.Element {
     </div>
   );
 }
+

@@ -96,6 +96,7 @@ export interface ClientToServerEvents {
   'room:leave': (callback: SuccessCallback) => void;
   'room:update_name': (data: UpdateNameData, callback: SuccessCallback) => void;
   'room:update_color': (data: UpdateColorData, callback: SuccessCallback) => void;
+  'room:switch_role': (data: { asSpectator: boolean }, callback: SuccessCallback) => void;
   'room:start': (data: StartGameData, callback: SuccessCallback) => void;
 
   // Discord Activity auto-join

@@ -39,18 +39,20 @@ export function GameScreen(): JSX.Element {
   // Get player positions based on player count and local player index
   const localPlayerIndex = gameState.players.findIndex(p => p.id === user?.id);
   const playerCount = gameState.players.length;
+  const isSpectating = localPlayerIndex < 0;
 
-  // Local player at bottom, opponents ordered by turn order starting from the player after local
-  const localPlayer = localPlayerIndex >= 0 ? gameState.players[localPlayerIndex] : undefined;
+  // Local player at bottom, opponents ordered by turn order starting from the player after local.
+  // Spectators see everyone as opponents (no local-player panel).
+  const localPlayer = !isSpectating ? gameState.players[localPlayerIndex] : undefined;
   const opponentsInTurnOrder: typeof gameState.players = [];
-  if (localPlayerIndex >= 0) {
+  if (!isSpectating) {
     for (let i = 1; i < playerCount; i++) {
       const nextIndex = (localPlayerIndex + i) % playerCount;
       const opponent = gameState.players[nextIndex];
-      if (opponent) {
-        opponentsInTurnOrder.push(opponent);
-      }
+      if (opponent) opponentsInTurnOrder.push(opponent);
     }
+  } else {
+    opponentsInTurnOrder.push(...gameState.players);
   }
 
   return (
@@ -78,9 +80,12 @@ export function GameScreen(): JSX.Element {
         ) : (
           <div className="current-turn-info">
             <span>
-              {isMyTurn() ? 'Your turn' : `${currentPlayer?.name}'s turn`}
+              {isSpectating
+                ? `${currentPlayer?.name}'s turn`
+                : isMyTurn() ? 'Your turn' : `${currentPlayer?.name}'s turn`}
             </span>
             <span className="round-indicator">Round {gameState.round}</span>
+            {isSpectating && <span className="spectating-badge">👁 Spectating</span>}
           </div>
         )}
       </div>

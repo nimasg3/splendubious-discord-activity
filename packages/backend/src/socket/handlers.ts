@@ -22,6 +22,7 @@ import {
   toRoomDTO,
   getOrCreateChannelRoom,
   resetChannelRoomIfEmpty,
+  switchPlayerRole,
 } from '../rooms/index.js';
 import {
   startGame,
@@ -206,6 +207,26 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
     callback({ success: true });
   });
 
+  // Switch role between player and spectator (lobby only)
+  socket.on('room:switch_role', (data, callback) => {
+    const { roomId, playerId } = socket.data;
+
+    if (!roomId || !playerId) {
+      callback({ success: false, error: 'Not in a room' });
+      return;
+    }
+
+    const result = switchPlayerRole(roomId, playerId, data.asSpectator);
+
+    if ('error' in result) {
+      callback({ success: false, error: result.error });
+      return;
+    }
+
+    io.to(roomId).emit('room:updated', toRoomDTO(result));
+    callback({ success: true });
+  });
+
   // Discord Activity: auto-create or join the channel's game room
   socket.on('discord:joinActivity', (data, callback) => {
     const { channelId, instanceId, guildId, userId, username, avatarHash } = data;
@@ -214,7 +235,11 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
     const room = getOrCreateChannelRoom(channelId, instanceId, userId, username, socket.id, avatarHash);
 
     // Join room (handles both new players and reconnections)
-    const result = joinRoom(room.id, userId, username, socket.id, false, avatarHash);
+    // If game is already in progress for a new user, automatically join as spectator
+    let result = joinRoom(room.id, userId, username, socket.id, false, avatarHash);
+    if ('error' in result && result.error.startsWith('Game already in progress')) {
+      result = joinRoom(room.id, userId, username, socket.id, true, avatarHash);
+    }
 
     if ('error' in result) {
       callback({ success: false, error: result.error });

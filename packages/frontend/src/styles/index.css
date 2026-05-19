@@ -407,39 +407,126 @@ button {
   color: var(--accent);
 }
 
-.players-section {
+.lobby-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
 }
 
-.players-section h3 {
-  margin-bottom: var(--spacing-sm);
+.lobby-section {
 }
 
-.players-list {
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  font-size: 1rem;
+}
+
+.section-icon {
+  font-size: 1rem;
+}
+
+.section-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.lobby-slots-list {
   list-style: none;
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
 
-.player-item {
+/* Filled slot */
+.lobby-slot.filled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   border-bottom: 1px solid var(--bg-primary);
 }
 
-.player-item:last-child {
+.lobby-slot.filled:last-child {
   border-bottom: none;
 }
 
-.player-item.local {
+.lobby-slot.filled.local {
   background: rgba(233, 69, 96, 0.1);
 }
 
-.player-item.spectator {
-  opacity: 0.6;
+.slot-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.slot-name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Empty slot */
+.lobby-slot.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--bg-primary);
+  min-height: 44px;
+}
+
+.lobby-slot.empty:last-child {
+  border-bottom: none;
+}
+
+.lobby-slot.empty.join-slot {
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  color: var(--accent);
+  transition: background 0.15s;
+}
+
+.lobby-slot.empty.join-slot:hover {
+  background: rgba(233, 69, 96, 0.1);
+}
+
+.plus-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: bold;
+  padding-top: 5px;
+}
+
+.join-label {
+  font-size: 0.85rem;
+}
+
+.empty-slot-dash {
+  color: var(--text-secondary);
+  opacity: 0.3;
+  font-size: 1rem;
+}
+
+/* Spectating badge in game status bar */
+.spectating-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  margin-left: var(--spacing-sm);
 }
 
 .host-badge,

@@ -203,6 +203,7 @@ interface GameContextValue {
   startGame: (playerCount: 2 | 3 | 4) => Promise<void>;
   updatePlayerName: (name: string) => Promise<void>;
   updatePlayerColor: (color: string) => Promise<void>;
+  switchRole: (asSpectator: boolean) => Promise<void>;
 
   // Game actions
   takeThreeGems: (gems: GemColor[]) => Promise<void>;
@@ -585,6 +586,14 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     }
   }, []);
 
+  const switchRole = useCallback(async (asSpectator: boolean) => {
+    try {
+      await socketClient.switchRole(asSpectator);
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', error: (error as Error).message });
+    }
+  }, []);
+
   // Game actions
   const takeThreeGems = useCallback(async (gems: GemColor[]) => {
     try {
@@ -745,6 +754,7 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     startGame,
     updatePlayerName,
     updatePlayerColor,
+    switchRole,
     takeThreeGems,
     takeTwoGems,
     reserveCard,

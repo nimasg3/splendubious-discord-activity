@@ -484,6 +484,59 @@ export function findRoomByChannelId(channelId: string): GameRoom | null {
 }
 
 /**
+ * Switches a player's role between player and spectator.
+ * Only allowed in the lobby. Max 4 of each type.
+ */
+export function switchPlayerRole(
+  roomId: string,
+  playerId: string,
+  asSpectator: boolean
+): GameRoom | { error: string } {
+  const room = rooms.get(roomId);
+  if (!room) return { error: 'Room not found' };
+
+  if (room.status !== 'lobby') {
+    return { error: 'Cannot switch roles during a game' };
+  }
+
+  const player = room.players.find(p => p.id === playerId);
+  if (!player) return { error: 'Player not found in room' };
+
+  if (player.isSpectator === asSpectator) return room; // already in desired role
+
+  if (asSpectator) {
+    // Moving to spectators — check capacity
+    const spectators = room.players.filter(p => p.isSpectator);
+    if (spectators.length >= 4) {
+      return { error: 'Spectators section is full (max 4)' };
+    }
+    // If this player is the host, transfer host to another non-spectator player
+    if (room.hostId === playerId) {
+      const nextHost = room.players.find(p => !p.isSpectator && p.id !== playerId);
+      if (!nextHost) {
+        return { error: 'Host must remain a player while others are present' };
+      }
+      room.hostId = nextHost.id;
+    }
+  } else {
+    // Moving to players — check capacity
+    const activePlayers = room.players.filter(p => !p.isSpectator);
+    if (activePlayers.length >= 4) {
+      return { error: 'Players section is full (max 4)' };
+    }
+    // Assign a color if they don't have a valid one
+    const takenColors = new Set(room.players.filter(p => !p.isSpectator && p.id !== playerId).map(p => p.color));
+    if (!player.color || takenColors.has(player.color)) {
+      player.color = pickDefaultColor(room);
+    }
+  }
+
+  player.isSpectator = asSpectator;
+  room.lastActivity = Date.now();
+  return room;
+}
+
+/**
  * Clears the channel→room mapping when all players have disconnected,
  * so the next Activity open creates a fresh room.
  */

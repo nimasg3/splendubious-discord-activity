@@ -21,6 +21,7 @@ interface ClientToServerEvents {
   'room:leave': (callback: SuccessCallback) => void;
   'room:update_name': (data: { name: string }, callback: SuccessCallback) => void;
   'room:update_color': (data: { color: string }, callback: SuccessCallback) => void;
+  'room:switch_role': (data: { asSpectator: boolean }, callback: SuccessCallback) => void;
   'room:start': (
     data: { config: { playerCount: 2 | 3 | 4 } },
     callback: SuccessCallback
@@ -239,6 +240,26 @@ export async function updatePlayerColor(color: string): Promise<void> {
         resolve();
       } else {
         reject(new Error(response.error || 'Failed to update color'));
+      }
+    });
+  });
+}
+
+/**
+ * Switches the player's role between player and spectator (lobby only)
+ */
+export async function switchRole(asSpectator: boolean): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (!socket) {
+      reject(new Error('Not connected to server'));
+      return;
+    }
+
+    socket.emit('room:switch_role', { asSpectator }, (response) => {
+      if (response.success) {
+        resolve();
+      } else {
+        reject(new Error(response.error || 'Failed to switch role'));
       }
     });
   });
