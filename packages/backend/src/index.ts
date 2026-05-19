@@ -86,7 +86,7 @@ app.use(express.json());
  * Receives the OAuth2 authorization code from the frontend and exchanges it
  * for an access token via Discord's API.
  */
-app.post('/api/discord/token', async (req, res) => {
+app.post('/discord/token', async (req, res) => {
   const { code } = req.body as { code?: unknown };
 
   if (!code || typeof code !== 'string') {

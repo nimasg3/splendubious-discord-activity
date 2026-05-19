@@ -5,11 +5,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    allowedHosts: true,
     proxy: {
       // API requests to the backend (used in local dev and Discord dev mode)
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/api/, ''),
       },
       // Socket.IO connection
       '/socket.io': {

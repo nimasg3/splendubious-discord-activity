@@ -102,7 +102,7 @@ export async function authenticateWithDiscord(): Promise<{
     ],
   });
 
-  const response = await fetch('/api/discord/token', {
+  const response = await fetch('/api/discord/token', {  // Discord proxy strips /api → /discord/token
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),
