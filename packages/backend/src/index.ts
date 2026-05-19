@@ -49,7 +49,8 @@ const corsOptions = {
     const isConfigured = configured.includes(origin);
     const isDiscord =
       /\.discordsays\.com$/.test(origin) || /\.discord\.com$/.test(origin);
-    callback(null, isConfigured || isDiscord);
+    const isCloudFront = /\.cloudfront\.net$/.test(origin);
+    callback(null, isConfigured || isDiscord || isCloudFront);
   },
   methods: ['GET', 'POST'],
   credentials: true,
