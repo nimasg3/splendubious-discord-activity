@@ -463,7 +463,8 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
         dispatch({ type: 'SET_ROOM', room });
         dispatch({ type: 'SET_HOST', isHost: room.hostId === playerId });
         dispatch({ type: 'SET_LOADING', isLoading: false });
-        dispatch({ type: 'SET_SCREEN', screen: 'lobby' });
+        // Navigate directly to game screen when rejoining an in-progress session
+        dispatch({ type: 'SET_SCREEN', screen: room.status === 'playing' ? 'game' : 'lobby' });
 
         // Track Discord participant changes (for awareness, not for joining —
         // joining is driven by each player's own discord:joinActivity emit)

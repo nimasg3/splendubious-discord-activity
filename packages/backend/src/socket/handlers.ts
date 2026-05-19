@@ -238,6 +238,14 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
     socket.to(result.id).emit('room:updated', toRoomDTO(result));
 
     callback({ success: true, room: toRoomDTO(result), playerId: userId });
+
+    // If rejoining a game already in progress, send the current game state
+    if (result.status === 'playing' && result.gameState) {
+      const playerColors = Object.fromEntries(result.players.map(p => [p.id, p.color]));
+      const playerAvatars = Object.fromEntries(result.players.map(p => [p.id, p.avatarHash ?? null]));
+      const clientState = { ...toClientGameState(result.gameState, userId), playerColors, playerAvatars };
+      socket.emit('game:state_updated', clientState);
+    }
   });
 
   // Start game
