@@ -27,6 +27,16 @@ interface ClientToServerEvents {
   ) => void;
   'game:action': (data: { action: PlayerAction }, callback: ActionCallback) => void;
   'ping': (callback: (timestamp: number) => void) => void;
+  'discord:joinActivity': (
+    data: {
+      channelId: string;
+      instanceId: string;
+      guildId: string | null;
+      userId: string;
+      username: string;
+    },
+    callback: RoomCallback
+  ) => void;
 }
 
 interface ServerToClientEvents {
@@ -378,6 +388,62 @@ export async function ping(): Promise<number> {
     socket.emit('ping', (_serverTime) => {
       const latency = Date.now() - start;
       resolve(latency);
+    });
+  });
+}
+
+// =============================================================================
+// DISCORD ACTIVITY
+// =============================================================================
+
+/**
+ * Waits for the socket to establish a connection.
+ * Resolves immediately if already connected.
+ */
+export function waitForConnection(timeoutMs = 10000): Promise<void> {
+  if (socket?.connected) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error('Socket connection timed out')),
+      timeoutMs
+    );
+
+    socket?.once('connect', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+
+    socket?.once('connect_error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}
+
+/**
+ * Joins the Discord Activity's channel room.
+ * Creates the room if this is the first player, or joins an existing one.
+ */
+export async function joinActivityRoom(data: {
+  channelId: string;
+  instanceId: string;
+  guildId: string | null;
+  userId: string;
+  username: string;
+}): Promise<{ room: RoomStateDTO; playerId: string }> {
+  return new Promise((resolve, reject) => {
+    if (!socket) {
+      reject(new Error('Not connected to server'));
+      return;
+    }
+
+    socket.emit('discord:joinActivity', data, (response) => {
+      if (response.success && response.room && response.playerId) {
+        resolve({ room: response.room, playerId: response.playerId });
+      } else {
+        reject(new Error(response.error || 'Failed to join activity room'));
+      }
     });
   });
 }

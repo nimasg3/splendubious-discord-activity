@@ -34,9 +34,23 @@ console.log('Starting server with config:', { PORT, CORS_ORIGIN });
 const app = express();
 const httpServer = createServer(app);
 
-// CORS configuration - allow all origins if * is set
+// CORS configuration — allows configured origin(s) plus Discord's proxy domains
 const corsOptions = {
-  origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN,
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
+    // Allow server-to-server (no origin header) and explicit wildcard config
+    if (!origin || CORS_ORIGIN === '*') {
+      callback(null, true);
+      return;
+    }
+    const configured = CORS_ORIGIN.split(',').map((o) => o.trim());
+    const isConfigured = configured.includes(origin);
+    const isDiscord =
+      /\.discordsays\.com$/.test(origin) || /\.discord\.com$/.test(origin);
+    callback(null, isConfigured || isDiscord);
+  },
   methods: ['GET', 'POST'],
   credentials: true,
 };
@@ -66,6 +80,57 @@ app.use(express.json());
 // =============================================================================
 // REST ENDPOINTS
 // =============================================================================
+
+/**
+ * Discord OAuth2 token exchange
+ * Receives the OAuth2 authorization code from the frontend and exchanges it
+ * for an access token via Discord's API.
+ */
+app.post('/api/discord/token', async (req, res) => {
+  const { code } = req.body as { code?: unknown };
+
+  if (!code || typeof code !== 'string') {
+    res.status(400).json({ error: 'code is required' });
+    return;
+  }
+
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    console.error('DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET not configured');
+    res.status(500).json({ error: 'Server misconfiguration' });
+    return;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'authorization_code',
+      code,
+    });
+
+    const discordRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params,
+    });
+
+    if (!discordRes.ok) {
+      const errText = await discordRes.text();
+      console.error('Discord token exchange failed:', errText);
+      res.status(502).json({ error: 'Token exchange failed' });
+      return;
+    }
+
+    const data = await discordRes.json() as { access_token: string };
+    res.json({ access_token: data.access_token });
+  } catch (err) {
+    console.error('Token exchange error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 /**
  * Health check endpoint

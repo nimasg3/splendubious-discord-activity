@@ -60,11 +60,28 @@ export interface GameRoom {
   createdAt: number;
   /** Last activity timestamp */
   lastActivity: number;
+  /** Discord channel ID (set when room is created via Discord Activity) */
+  discordChannelId?: string;
+  /** Discord activity instance ID */
+  discordInstanceId?: string;
+  /** Discord guild ID */
+  discordGuildId?: string;
 }
 
 // =============================================================================
 // SOCKET EVENT TYPES
 // =============================================================================
+
+/**
+ * Data payload for joining via Discord Activity
+ */
+export interface DiscordJoinData {
+  channelId: string;
+  instanceId: string;
+  guildId: string | null;
+  userId: string;
+  username: string;
+}
 
 /**
  * Events sent from client to server
@@ -77,6 +94,9 @@ export interface ClientToServerEvents {
   'room:update_name': (data: UpdateNameData, callback: SuccessCallback) => void;
   'room:update_color': (data: UpdateColorData, callback: SuccessCallback) => void;
   'room:start': (data: StartGameData, callback: SuccessCallback) => void;
+
+  // Discord Activity auto-join
+  'discord:joinActivity': (data: DiscordJoinData, callback: RoomCallback) => void;
 
   // Game actions
   'game:action': (data: GameActionData, callback: ActionCallback) => void;

@@ -20,6 +20,9 @@ import {
 /** In-memory room storage */
 const rooms = new Map<string, GameRoom>();
 
+/** Maps Discord channel IDs to their associated room ID */
+const channelRoomMap = new Map<string, string>();
+
 /** Default player colors assigned in order */
 const DEFAULT_COLORS = ['#c0392b', '#2471a3', '#1e8449', '#d4ac0d', '#7d3c98', '#ca6f1e'];
 
@@ -413,9 +416,62 @@ export function cleanupInactiveRooms(maxInactiveMs: number = 3600000): void {
   for (const [roomId, room] of rooms.entries()) {
     if (now - room.lastActivity > maxInactiveMs) {
       console.log(`Cleaning up inactive room: ${roomId}`);
+      // Remove channel mapping if this was a Discord-linked room
+      if (room.discordChannelId) {
+        channelRoomMap.delete(room.discordChannelId);
+      }
       rooms.delete(roomId);
     }
   }
+}
+
+// =============================================================================
+// DISCORD CHANNEL ROOMS
+// =============================================================================
+
+/**
+ * Gets the existing room for a Discord channel, or creates a new one.
+ * Ensures each Discord channel has at most one active game room.
+ *
+ * @param channelId - Discord channel ID
+ * @param instanceId - Discord activity instance ID
+ * @param hostId - Discord user ID of the first player (becomes host)
+ * @param hostName - Display name of the first player
+ * @param hostSocketId - Socket ID of the first player
+ */
+export function getOrCreateChannelRoom(
+  channelId: string,
+  instanceId: string,
+  hostId: string,
+  hostName: string,
+  hostSocketId: string
+): GameRoom {
+  const existingRoomId = channelRoomMap.get(channelId);
+
+  if (existingRoomId) {
+    const existingRoom = rooms.get(existingRoomId);
+    if (existingRoom && existingRoom.status !== 'ended') {
+      return existingRoom;
+    }
+    // Stale mapping — clean it up and create a fresh room
+    channelRoomMap.delete(channelId);
+  }
+
+  const room = createRoom(hostId, hostName, hostSocketId);
+  room.discordChannelId = channelId;
+  room.discordInstanceId = instanceId;
+
+  channelRoomMap.set(channelId, room.id);
+  return room;
+}
+
+/**
+ * Finds a room by its Discord channel ID
+ */
+export function findRoomByChannelId(channelId: string): GameRoom | null {
+  const roomId = channelRoomMap.get(channelId);
+  if (!roomId) return null;
+  return rooms.get(roomId) ?? null;
 }
 
 /**

@@ -14,6 +14,7 @@ import {
   DiscordUser,
 } from '../types';
 import * as socketClient from '../socket/client.js';
+import { initializeDiscordSDK, authenticateWithDiscord, getChannelId, getInstanceId, getGuildId, onParticipantsChange } from '../discord/index.js';
 import { triggerGemAnimation, triggerCardAnimation, storeCardPositionForAnimation, storeDeckPositionForAnimation, getStoredSlotInfo, triggerSlotAnimationStart, triggerDeckToSlotAnimation, triggerDeckReserveAnimation, triggerNobleAnimation, syncBoardNobleData, getBoardNobleIds } from './AnimationContext.js';
 
 // =============================================================================
@@ -394,23 +395,69 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
     const unsubError = socketClient.onError((error) => {
       dispatch({ type: 'SET_ERROR', error: error.message });
     });
-    
-    // Initial loading complete - go to menu
-    dispatch({ type: 'SET_LOADING', isLoading: false });
-    dispatch({ type: 'SET_SCREEN', screen: 'menu' });
-    
-    // Set a mock user for local development
-    dispatch({ 
-      type: 'SET_USER', 
-      user: {
-        id: `user_${Date.now()}`,
-        username: 'Player',
-        discriminator: '0000',
-        avatar: null,
-        globalName: 'Player',
+
+    // Initialize Discord SDK, authenticate, and auto-join the channel's game room
+    let unsubParticipants: (() => void) | undefined;
+
+    async function initDiscord() {
+      try {
+        await initializeDiscordSDK();
+
+        const isEmbedded = window.self !== window.top;
+
+        if (!isEmbedded) {
+          // Local development — use the mock SDK path
+          const { user } = await authenticateWithDiscord();
+          dispatch({ type: 'SET_USER', user });
+          dispatch({ type: 'SET_LOADING', isLoading: false });
+          dispatch({ type: 'SET_SCREEN', screen: 'menu' });
+          return;
+        }
+
+        // Running inside Discord: authenticate and auto-join the channel lobby
+        const { user } = await authenticateWithDiscord();
+        dispatch({ type: 'SET_USER', user });
+
+        const channelId = getChannelId();
+        const instanceId = getInstanceId();
+        const guildId = getGuildId();
+
+        if (!channelId || !instanceId) {
+          throw new Error('Missing Discord channel context');
+        }
+
+        // Wait for socket to connect before emitting
+        await socketClient.waitForConnection();
+
+        const { room, playerId } = await socketClient.joinActivityRoom({
+          channelId,
+          instanceId,
+          guildId,
+          userId: user.id,
+          username: user.globalName ?? user.username,
+        });
+
+        dispatch({ type: 'UPDATE_USER_ID', id: playerId });
+        dispatch({ type: 'SET_ROOM', room });
+        dispatch({ type: 'SET_HOST', isHost: room.hostId === playerId });
+        dispatch({ type: 'SET_LOADING', isLoading: false });
+        dispatch({ type: 'SET_SCREEN', screen: 'lobby' });
+
+        // Track Discord participant changes (for awareness, not for joining —
+        // joining is driven by each player's own discord:joinActivity emit)
+        unsubParticipants = onParticipantsChange((participants) => {
+          console.log('Discord participants updated:', participants.length);
+        });
+      } catch (err) {
+        console.error('Discord init failed:', err);
+        const message = err instanceof Error ? err.message : 'Failed to initialize';
+        dispatch({ type: 'SET_ERROR', error: message });
+        dispatch({ type: 'SET_LOADING', isLoading: false });
       }
-    });
-    
+    }
+
+    initDiscord();
+
     return () => {
       unsubRoom();
       unsubPlayerJoined();
@@ -420,6 +467,7 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
       unsubGameEnded();
       unsubActionApplied();
       unsubError();
+      unsubParticipants?.();
       socketClient.disconnect();
     };
   }, []);

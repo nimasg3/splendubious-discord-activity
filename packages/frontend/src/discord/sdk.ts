@@ -4,14 +4,16 @@
  * Handles Discord Embedded App SDK setup and authentication.
  */
 
-import { DiscordSDK } from '@discord/embedded-app-sdk';
+import { DiscordSDK, DiscordSDKMock } from '@discord/embedded-app-sdk';
 import { DiscordUser, ActivityParticipant } from '../types';
+
+const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID as string;
 
 // =============================================================================
 // SDK INSTANCE
 // =============================================================================
 
-let discordSdk: DiscordSDK | null = null;
+let discordSdk: DiscordSDK | DiscordSDKMock | null = null;
 let isReady = false;
 
 // =============================================================================
@@ -19,24 +21,32 @@ let isReady = false;
 // =============================================================================
 
 /**
- * Initializes the Discord SDK
- *
- * @returns Discord SDK instance
+ * Initializes the Discord SDK.
+ * Uses the real SDK when running inside a Discord iframe, mock otherwise.
  */
-export async function initializeDiscordSDK(): Promise<DiscordSDK> {
-  // TODO: Implement Discord SDK initialization
-  // 1. Get client ID from environment
-  // 2. Create DiscordSDK instance
-  // 3. Wait for SDK ready
-  // 4. Authorize and authenticate
-  // 5. Return SDK instance
-  throw new Error('TODO: Implement initializeDiscordSDK');
+export async function initializeDiscordSDK(): Promise<DiscordSDK | DiscordSDKMock> {
+  if (discordSdk) return discordSdk;
+
+  const isEmbedded = window.self !== window.top;
+
+  if (!isEmbedded) {
+    console.log('Running outside Discord — using DiscordSDKMock for local dev');
+    discordSdk = new DiscordSDKMock(DISCORD_CLIENT_ID, null, null);
+    isReady = true;
+    return discordSdk;
+  }
+
+  discordSdk = new DiscordSDK(DISCORD_CLIENT_ID);
+  await discordSdk.ready();
+  isReady = true;
+  console.log('Discord SDK ready');
+  return discordSdk;
 }
 
 /**
  * Gets the current Discord SDK instance
  */
-export function getDiscordSDK(): DiscordSDK | null {
+export function getDiscordSDK(): DiscordSDK | DiscordSDKMock | null {
   return discordSdk;
 }
 
@@ -52,20 +62,74 @@ export function isDiscordReady(): boolean {
 // =============================================================================
 
 /**
- * Authenticates with Discord
- *
- * @returns Access token and user info
+ * Authenticates with Discord.
+ * In local dev (mock SDK), returns a generated dev user without hitting Discord's API.
+ * In production, performs the full OAuth2 code exchange via the backend.
  */
 export async function authenticateWithDiscord(): Promise<{
   accessToken: string;
   user: DiscordUser;
 }> {
-  // TODO: Implement Discord authentication
-  // 1. Call sdk.commands.authorize()
-  // 2. Exchange code for access token (via backend)
-  // 3. Call sdk.commands.authenticate()
-  // 4. Return token and user info
-  throw new Error('TODO: Implement authenticateWithDiscord');
+  if (!discordSdk) {
+    throw new Error('Discord SDK not initialized — call initializeDiscordSDK() first');
+  }
+
+  // Local dev: return a mock user without real OAuth
+  if (discordSdk instanceof DiscordSDKMock) {
+    const mockUser: DiscordUser = {
+      id: `dev_${Date.now()}`,
+      username: 'DevPlayer',
+      discriminator: '0000',
+      avatar: null,
+      globalName: 'Dev Player',
+    };
+    return { accessToken: 'mock_token', user: mockUser };
+  }
+
+  // Production: full OAuth2 flow
+  const sdk = discordSdk as DiscordSDK;
+
+  const { code } = await sdk.commands.authorize({
+    client_id: DISCORD_CLIENT_ID,
+    response_type: 'code',
+    state: '',
+    prompt: 'none',
+    scope: [
+      'identify',
+      'guilds',
+      'guilds.members.read',
+      'rpc.activities.write',
+    ],
+  });
+
+  const response = await fetch('/api/discord/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Token exchange failed: ${text}`);
+  }
+
+  const { access_token } = await response.json() as { access_token: string };
+
+  const auth = await sdk.commands.authenticate({ access_token });
+
+  if (!auth.user) {
+    throw new Error('Authentication failed — no user returned');
+  }
+
+  const user: DiscordUser = {
+    id: auth.user.id,
+    username: auth.user.username,
+    discriminator: auth.user.discriminator ?? '0',
+    avatar: auth.user.avatar ?? null,
+    globalName: auth.user.global_name ?? null,
+  };
+
+  return { accessToken: access_token, user };
 }
 
 // =============================================================================
@@ -76,29 +140,42 @@ export async function authenticateWithDiscord(): Promise<{
  * Gets current activity participants
  */
 export async function getParticipants(): Promise<ActivityParticipant[]> {
-  // TODO: Implement participant fetching
-  // Use SDK to get current activity participants
-  throw new Error('TODO: Implement getParticipants');
+  if (!discordSdk || discordSdk instanceof DiscordSDKMock) return [];
+
+  const { participants } = await (discordSdk as DiscordSDK).commands.getInstanceConnectedParticipants();
+  return participants.map((p) => ({ id: p.id, username: p.username }));
 }
 
 /**
- * Subscribes to participant changes
+ * Subscribes to participant changes.
+ * Returns an unsubscribe function.
  */
 export function onParticipantsChange(
-  _callback: (participants: ActivityParticipant[]) => void
+  callback: (participants: ActivityParticipant[]) => void
 ): () => void {
-  // TODO: Implement participant subscription
-  // 1. Subscribe to ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE
-  // 2. Return unsubscribe function
-  throw new Error('TODO: Implement onParticipantsChange');
+  if (!discordSdk || discordSdk instanceof DiscordSDKMock) {
+    return () => {};
+  }
+
+  const sdk = discordSdk as DiscordSDK;
+
+  const handler = ({ participants }: { participants: Array<{ id: string; username: string }> }) => {
+    callback(participants.map((p) => ({ id: p.id, username: p.username })));
+  };
+
+  sdk.subscribe('ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE', handler);
+
+  return () => {
+    sdk.unsubscribe('ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE', handler);
+  };
 }
 
 /**
- * Invites a user to the activity
+ * Invites a user to the activity.
+ * Discord handles invitations natively via its overlay — no SDK command needed.
  */
 export async function inviteUser(_userId: string): Promise<void> {
-  // TODO: Implement user invitation
-  throw new Error('TODO: Implement inviteUser');
+  // Invitations are surfaced through the Discord UI automatically
 }
 
 // =============================================================================
@@ -111,16 +188,14 @@ export async function inviteUser(_userId: string): Promise<void> {
 export async function setLayoutMode(
   _mode: 'focused' | 'pip' | 'grid'
 ): Promise<void> {
-  // TODO: Implement layout mode setting
-  throw new Error('TODO: Implement setLayoutMode');
+  // Reserved for future implementation
 }
 
 /**
  * Gets the current layout mode
  */
 export async function getLayoutMode(): Promise<string> {
-  // TODO: Implement layout mode getting
-  throw new Error('TODO: Implement getLayoutMode');
+  return 'focused';
 }
 
 // =============================================================================
@@ -128,25 +203,22 @@ export async function getLayoutMode(): Promise<string> {
 // =============================================================================
 
 /**
- * Gets the current activity instance ID
+ * Gets the current activity instance ID (unique per activity launch in a channel)
  */
 export function getInstanceId(): string | null {
-  // TODO: Implement instance ID retrieval
-  throw new Error('TODO: Implement getInstanceId');
+  return discordSdk?.instanceId ?? null;
 }
 
 /**
  * Gets the channel ID where the activity is running
  */
 export function getChannelId(): string | null {
-  // TODO: Implement channel ID retrieval
-  throw new Error('TODO: Implement getChannelId');
+  return discordSdk?.channelId ?? null;
 }
 
 /**
  * Gets the guild ID where the activity is running
  */
 export function getGuildId(): string | null {
-  // TODO: Implement guild ID retrieval
-  throw new Error('TODO: Implement getGuildId');
+  return discordSdk?.guildId ?? null;
 }

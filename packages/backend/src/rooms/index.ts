@@ -20,4 +20,6 @@ export {
   toRoomDTO,
   toPlayerDTO,
   cleanupInactiveRooms,
+  getOrCreateChannelRoom,
+  findRoomByChannelId,
 } from './roomManager.js';

@@ -20,6 +20,7 @@ import {
   updatePlayerName,
   updatePlayerColor,
   toRoomDTO,
+  getOrCreateChannelRoom,
 } from '../rooms/index.js';
 import {
   startGame,
@@ -201,6 +202,74 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
 
     io.to(roomId).emit('room:updated', toRoomDTO(room));
     callback({ success: true });
+  });
+
+  // Discord Activity: auto-create or join the channel's game room
+  socket.on('discord:joinActivity', (data, callback) => {
+    const { channelId, instanceId, guildId, userId, username } = data;
+
+    // Get or create the room for this Discord channel
+    const room = getOrCreateChannelRoom(channelId, instanceId, userId, username, socket.id);
+
+    // Join room (handles both new players and reconnections)
+    const result = joinRoom(room.id, userId, username, socket.id, false);
+
+    if ('error' in result) {
+      callback({ success: false, error: result.error });
+      return;
+    }
+
+    // Attach Discord guild to room if not already set
+    if (guildId && !result.discordGuildId) {
+      result.discordGuildId = guildId;
+    }
+
+    // Store player info on socket
+    socket.data.playerId = userId;
+    socket.data.playerName = username;
+    socket.data.roomId = result.id;
+
+    // Join socket.io room channel
+    socket.join(result.id);
+
+    // Broadcast updated room to all existing players
+    socket.to(result.id).emit('room:updated', toRoomDTO(result));
+
+    callback({ success: true, room: toRoomDTO(result), playerId: userId });
+  });
+
+  // Discord Activity: auto-create or join the channel's game room
+  socket.on('discord:joinActivity', (data, callback) => {
+    const { channelId, instanceId, guildId, userId, username } = data;
+
+    // Get or create the room for this Discord channel
+    const room = getOrCreateChannelRoom(channelId, instanceId, userId, username, socket.id);
+
+    // Join room (handles both new players and reconnections)
+    const result = joinRoom(room.id, userId, username, socket.id, false);
+
+    if ('error' in result) {
+      callback({ success: false, error: result.error });
+      return;
+    }
+
+    // Attach Discord guild to room if not already set
+    if (guildId && !result.discordGuildId) {
+      result.discordGuildId = guildId;
+    }
+
+    // Store player info on socket
+    socket.data.playerId = userId;
+    socket.data.playerName = username;
+    socket.data.roomId = result.id;
+
+    // Join socket.io room channel
+    socket.join(result.id);
+
+    // Broadcast updated room to all existing players
+    socket.to(result.id).emit('room:updated', toRoomDTO(result));
+
+    callback({ success: true, room: toRoomDTO(result), playerId: userId });
   });
 
   // Start game
