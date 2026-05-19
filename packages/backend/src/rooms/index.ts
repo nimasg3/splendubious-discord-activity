@@ -22,4 +22,5 @@ export {
   cleanupInactiveRooms,
   getOrCreateChannelRoom,
   findRoomByChannelId,
+  resetChannelRoomIfEmpty,
 } from './roomManager.js';

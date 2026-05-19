@@ -21,6 +21,7 @@ import {
   updatePlayerColor,
   toRoomDTO,
   getOrCreateChannelRoom,
+  resetChannelRoomIfEmpty,
 } from '../rooms/index.js';
 import {
   startGame,
@@ -328,6 +329,10 @@ function handleDisconnect(socket: GameSocket, _io: GameServer): void {
       if (room) {
         // Broadcast status change to room
         socket.to(roomId).emit('room:player_status', playerId, 'disconnected');
+
+        // If all players are now disconnected, clear the session so a fresh
+        // one is created next time the Discord Activity is opened
+        resetChannelRoomIfEmpty(roomId);
       }
     }
   });

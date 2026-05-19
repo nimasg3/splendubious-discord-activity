@@ -103,17 +103,8 @@ export function joinRoom(
   if (!room) {
     return { error: 'Room not found' };
   }
-  
-  // Check if game already started (can only join as spectator)
-  if (room.status === 'playing' && !asSpectator) {
-    return { error: 'Game already in progress. You can only join as a spectator.' };
-  }
-  
-  if (room.status === 'ended') {
-    return { error: 'Game has ended' };
-  }
-  
-  // Check if player already in room
+
+  // Check if player already in room FIRST — allows reconnection to in-progress games
   const existingPlayer = room.players.find(p => p.id === playerId);
   if (existingPlayer) {
     // Reconnection - update socket ID
@@ -124,6 +115,17 @@ export function joinRoom(
     room.lastActivity = Date.now();
     return room;
   }
+
+  // Check if game already started (can only join as spectator)
+  if (room.status === 'playing' && !asSpectator) {
+    return { error: 'Game already in progress. You can only join as a spectator.' };
+  }
+
+  if (room.status === 'ended') {
+    return { error: 'Game has ended' };
+  }
+
+  // Check player already in room (original block removed — handled above)
   
   // Check player limit (max 4 non-spectator players)
   if (!asSpectator) {
@@ -479,6 +481,22 @@ export function findRoomByChannelId(channelId: string): GameRoom | null {
   const roomId = channelRoomMap.get(channelId);
   if (!roomId) return null;
   return rooms.get(roomId) ?? null;
+}
+
+/**
+ * Clears the channel→room mapping when all players have disconnected,
+ * so the next Activity open creates a fresh room.
+ */
+export function resetChannelRoomIfEmpty(roomId: string): void {
+  const room = rooms.get(roomId);
+  if (!room?.discordChannelId) return;
+
+  const anyConnected = room.players.some(p => p.status === 'connected');
+  if (!anyConnected) {
+    channelRoomMap.delete(room.discordChannelId);
+    rooms.delete(roomId);
+    console.log(`All players disconnected from Discord room ${roomId} — session cleared`);
+  }
 }
 
 /**
