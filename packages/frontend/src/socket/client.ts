@@ -77,9 +77,10 @@ let socket: GameSocket | null = null;
  * Connects to the game server
  *
  * @param serverUrl - Server URL (optional, defaults to relative)
+ * @param socketPath - Socket.IO path (optional, defaults to /socket.io)
  * @returns Socket instance
  */
-export function connect(serverUrl?: string): GameSocket {
+export function connect(serverUrl?: string, socketPath?: string): GameSocket {
   if (socket?.connected) {
     return socket;
   }
@@ -88,6 +89,7 @@ export function connect(serverUrl?: string): GameSocket {
   
   socket = io(url, {
     transports: ['polling'],
+    path: socketPath || '/socket.io',
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
