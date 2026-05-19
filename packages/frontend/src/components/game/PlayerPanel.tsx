@@ -104,6 +104,10 @@ export function PlayerPanel({
 
   // Player color from game state playerColors map
   const playerColor = gameState?.playerColors?.[player.id];
+  const avatarHash = gameState?.playerAvatars?.[player.id];
+  const avatarUrl = avatarHash
+    ? `https://cdn.discordapp.com/avatars/${player.id}/${avatarHash}.png?size=64`
+    : null;
 
   return (
     <div 
@@ -113,6 +117,13 @@ export function PlayerPanel({
     >
       {/* Player header */}
       <div className="player-header">
+        {avatarUrl && (
+          <img
+            className="player-avatar"
+            src={avatarUrl}
+            alt={player.name}
+          />
+        )}
         <div className="player-name">
           {player.name}
           {isLocalPlayer && <span className="you-indicator"> (You)</span>}

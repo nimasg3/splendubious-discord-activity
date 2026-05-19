@@ -128,7 +128,8 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
     if (gameState) {
       const joinedRoom = getRoom(data.roomId);
       const playerColors = joinedRoom ? Object.fromEntries(joinedRoom.players.map(p => [p.id, p.color])) : {};
-      const clientState = { ...toClientGameState(gameState, playerId), playerColors };
+      const playerAvatars = joinedRoom ? Object.fromEntries(joinedRoom.players.map(p => [p.id, p.avatarHash ?? null])) : {};
+      const clientState = { ...toClientGameState(gameState, playerId), playerColors, playerAvatars };
       socket.emit('game:state_updated', clientState);
     }
   });
@@ -206,47 +207,13 @@ function handleRoomEvents(socket: GameSocket, io: GameServer): void {
 
   // Discord Activity: auto-create or join the channel's game room
   socket.on('discord:joinActivity', (data, callback) => {
-    const { channelId, instanceId, guildId, userId, username } = data;
+    const { channelId, instanceId, guildId, userId, username, avatarHash } = data;
 
     // Get or create the room for this Discord channel
-    const room = getOrCreateChannelRoom(channelId, instanceId, userId, username, socket.id);
+    const room = getOrCreateChannelRoom(channelId, instanceId, userId, username, socket.id, avatarHash);
 
     // Join room (handles both new players and reconnections)
-    const result = joinRoom(room.id, userId, username, socket.id, false);
-
-    if ('error' in result) {
-      callback({ success: false, error: result.error });
-      return;
-    }
-
-    // Attach Discord guild to room if not already set
-    if (guildId && !result.discordGuildId) {
-      result.discordGuildId = guildId;
-    }
-
-    // Store player info on socket
-    socket.data.playerId = userId;
-    socket.data.playerName = username;
-    socket.data.roomId = result.id;
-
-    // Join socket.io room channel
-    socket.join(result.id);
-
-    // Broadcast updated room to all existing players
-    socket.to(result.id).emit('room:updated', toRoomDTO(result));
-
-    callback({ success: true, room: toRoomDTO(result), playerId: userId });
-  });
-
-  // Discord Activity: auto-create or join the channel's game room
-  socket.on('discord:joinActivity', (data, callback) => {
-    const { channelId, instanceId, guildId, userId, username } = data;
-
-    // Get or create the room for this Discord channel
-    const room = getOrCreateChannelRoom(channelId, instanceId, userId, username, socket.id);
-
-    // Join room (handles both new players and reconnections)
-    const result = joinRoom(room.id, userId, username, socket.id, false);
+    const result = joinRoom(room.id, userId, username, socket.id, false, avatarHash);
 
     if ('error' in result) {
       callback({ success: false, error: result.error });
@@ -398,11 +365,12 @@ export function broadcastGameStarted(io: GameServer, roomId: string): void {
   if (!room?.gameState) return;
 
   const playerColors = Object.fromEntries(room.players.map(p => [p.id, p.color]));
+  const playerAvatars = Object.fromEntries(room.players.map(p => [p.id, p.avatarHash ?? null]));
 
   // For each connected player, create personalized state and send game:started
   for (const player of room.players) {
     if (player.socketId && player.status === 'connected') {
-      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors };
+      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors, playerAvatars };
       io.to(player.socketId).emit('game:started', clientState);
     }
   }
@@ -416,11 +384,12 @@ export function broadcastGameState(io: GameServer, roomId: string): void {
   if (!room?.gameState) return;
 
   const playerColors = Object.fromEntries(room.players.map(p => [p.id, p.color]));
+  const playerAvatars = Object.fromEntries(room.players.map(p => [p.id, p.avatarHash ?? null]));
 
   // For each connected player, create personalized state and send
   for (const player of room.players) {
     if (player.socketId && player.status === 'connected') {
-      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors };
+      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors, playerAvatars };
       io.to(player.socketId).emit('game:state_updated', clientState);
     }
   }
@@ -434,11 +403,12 @@ export function broadcastActionApplied(io: GameServer, roomId: string, action: i
   if (!room?.gameState) return;
 
   const playerColors = Object.fromEntries(room.players.map(p => [p.id, p.color]));
+  const playerAvatars = Object.fromEntries(room.players.map(p => [p.id, p.avatarHash ?? null]));
 
   // For each connected player, send action applied with personalized state
   for (const player of room.players) {
     if (player.socketId && player.status === 'connected') {
-      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors };
+      const clientState = { ...toClientGameState(room.gameState, player.id), playerColors, playerAvatars };
       io.to(player.socketId).emit('game:action_applied', action, clientState);
     }
   }

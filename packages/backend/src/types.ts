@@ -31,6 +31,8 @@ export interface RoomPlayer {
   status: ConnectionStatus;
   /** Whether player is a spectator */
   isSpectator: boolean;
+  /** Discord avatar hash (null if no avatar or non-Discord player) */
+  avatarHash?: string | null;
   /** Last activity timestamp */
   lastActivity: number;
 }
@@ -81,6 +83,7 @@ export interface DiscordJoinData {
   guildId: string | null;
   userId: string;
   username: string;
+  avatarHash?: string | null;
 }
 
 /**
@@ -165,6 +168,7 @@ export interface PlayerDTO {
   color: string;
   status: ConnectionStatus;
   isSpectator: boolean;
+  avatarHash?: string | null;
 }
 
 /**
@@ -197,6 +201,9 @@ export interface ClientGameState {
 
   /** Player colors keyed by player ID */
   playerColors?: Record<string, string>;
+
+  /** Player Discord avatar hashes keyed by player ID */
+  playerAvatars?: Record<string, string | null>;
 }
 
 /**

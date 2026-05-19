@@ -441,6 +441,7 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
           guildId,
           userId: user.id,
           username: user.globalName ?? user.username,
+          avatarHash: user.avatar,
         });
 
         dispatch({ type: 'UPDATE_USER_ID', id: playerId });

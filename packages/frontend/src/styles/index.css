@@ -1467,6 +1467,16 @@ button {
   border-bottom: 1px solid var(--bg-primary);
 }
 
+/* Avatar used in both lobby and game player panels */
+.player-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--bg-primary);
+}
+
 .player-name {
   font-weight: 600;
   flex: 1;

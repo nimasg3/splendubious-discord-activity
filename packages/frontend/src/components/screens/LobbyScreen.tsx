@@ -17,6 +17,10 @@ const PLAYER_COLORS = [
   { label: 'Orange', value: '#ca6f1e' },
 ];
 
+function getDiscordAvatarUrl(userId: string, avatarHash: string): string {
+  return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.png?size=64`;
+}
+
 export function LobbyScreen(): JSX.Element {
   const { state, startGame, leaveRoom, updatePlayerName, updatePlayerColor } = useGame();
   const [isStarting, setIsStarting] = useState(false);
@@ -136,6 +140,13 @@ export function LobbyScreen(): JSX.Element {
                   key={player.id} 
                   className={`player-item ${isMe ? 'local' : ''} ${player.isSpectator ? 'spectator' : ''}`}
                 >
+                  {player.avatarHash && (
+                    <img
+                      className="player-avatar"
+                      src={getDiscordAvatarUrl(player.id, player.avatarHash)}
+                      alt={player.name}
+                    />
+                  )}
                   <span className="player-name">
                     {isMe && isEditingName ? (
                       <span className="name-edit-container">

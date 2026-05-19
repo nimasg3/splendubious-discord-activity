@@ -433,6 +433,7 @@ export async function joinActivityRoom(data: {
   guildId: string | null;
   userId: string;
   username: string;
+  avatarHash?: string | null;
 }): Promise<{ room: RoomStateDTO; playerId: string }> {
   return new Promise((resolve, reject) => {
     if (!socket) {

@@ -29,6 +29,7 @@ export interface PlayerDTO {
   color: string;
   status: ConnectionStatus;
   isSpectator: boolean;
+  avatarHash?: string | null;
 }
 
 /**
@@ -68,6 +69,9 @@ export interface ClientGameState {
 
   /** Player colors keyed by player ID */
   playerColors: Record<string, string>;
+
+  /** Player Discord avatar hashes keyed by player ID */
+  playerAvatars?: Record<string, string | null>;
 }
 
 /**

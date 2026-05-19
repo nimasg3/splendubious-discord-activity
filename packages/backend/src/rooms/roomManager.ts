@@ -49,7 +49,8 @@ function pickDefaultColor(room: GameRoom): string {
 export function createRoom(
   hostId: string,
   hostName: string,
-  hostSocketId: string
+  hostSocketId: string,
+  hostAvatarHash?: string | null
 ): GameRoom {
   const roomId = generateRoomId();
   
@@ -60,6 +61,7 @@ export function createRoom(
     socketId: hostSocketId,
     status: 'connected',
     isSpectator: false,
+    avatarHash: hostAvatarHash ?? null,
     lastActivity: Date.now(),
   };
   
@@ -93,7 +95,8 @@ export function joinRoom(
   playerId: string,
   playerName: string,
   socketId: string,
-  asSpectator: boolean = false
+  asSpectator: boolean = false,
+  avatarHash?: string | null
 ): GameRoom | { error: string } {
   const room = rooms.get(roomId);
   
@@ -116,6 +119,7 @@ export function joinRoom(
     // Reconnection - update socket ID
     existingPlayer.socketId = socketId;
     existingPlayer.status = 'connected';
+    if (avatarHash !== undefined) existingPlayer.avatarHash = avatarHash;
     existingPlayer.lastActivity = Date.now();
     room.lastActivity = Date.now();
     return room;
@@ -137,6 +141,7 @@ export function joinRoom(
     socketId: socketId,
     status: 'connected',
     isSpectator: asSpectator,
+    avatarHash: avatarHash ?? null,
     lastActivity: Date.now(),
   };
   
@@ -399,6 +404,7 @@ export function toPlayerDTO(player: RoomPlayer): PlayerDTO {
     color: player.color,
     status: player.status,
     isSpectator: player.isSpectator,
+    avatarHash: player.avatarHash,
   };
 }
 
@@ -444,7 +450,8 @@ export function getOrCreateChannelRoom(
   instanceId: string,
   hostId: string,
   hostName: string,
-  hostSocketId: string
+  hostSocketId: string,
+  hostAvatarHash?: string | null
 ): GameRoom {
   const existingRoomId = channelRoomMap.get(channelId);
 
@@ -457,7 +464,7 @@ export function getOrCreateChannelRoom(
     channelRoomMap.delete(channelId);
   }
 
-  const room = createRoom(hostId, hostName, hostSocketId);
+  const room = createRoom(hostId, hostName, hostSocketId, hostAvatarHash);
   room.discordChannelId = channelId;
   room.discordInstanceId = instanceId;
 
