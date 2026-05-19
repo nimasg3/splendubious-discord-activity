@@ -31,7 +31,7 @@ export async function initializeDiscordSDK(): Promise<DiscordSDK | DiscordSDKMoc
 
   if (!isEmbedded) {
     console.log('Running outside Discord — using DiscordSDKMock for local dev');
-    discordSdk = new DiscordSDKMock(DISCORD_CLIENT_ID, null, null);
+    discordSdk = new DiscordSDKMock(DISCORD_CLIENT_ID, null, null, null);
     isReady = true;
     return discordSdk;
   }
