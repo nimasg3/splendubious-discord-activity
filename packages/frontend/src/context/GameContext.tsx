@@ -242,14 +242,29 @@ export function GameProvider({ children }: GameProviderProps): JSX.Element {
 
   // Initialize socket connection and subscriptions
   useEffect(() => {
-    // Connect to server:
-    // - Inside Discord: route through Activity proxy (/api → App Runner)
-    // - Outside Discord: use window.location.origin so Vite proxy handles it in dev
+    // Connect to server — three distinct environments:
+    // 1. Local dev (localhost): Vite proxy forwards /socket.io → localhost:3001
+    // 2. Discord embedded (iframe): Discord Activity proxy strips /api → App Runner
+    // 3. Production direct (CloudFront URL): CloudFront has no /socket.io rule,
+    //    so connect directly to App Runner via VITE_SOCKET_URL
     const isLocalDev = window.location.hostname === 'localhost';
-    const serverUrl = window.location.origin;
-    // Local dev: Vite proxies /socket.io → backend directly
-    // Discord embedded or production CloudFront: /api/socket.io → App Runner (Discord/CloudFront both strip /api prefix)
-    const socketPath = isLocalDev ? '/socket.io' : '/api/socket.io';
+    const isEmbedded = window.self !== window.top;
+
+    let serverUrl: string;
+    let socketPath: string;
+
+    if (isLocalDev) {
+      serverUrl = window.location.origin;
+      socketPath = '/socket.io';
+    } else if (isEmbedded) {
+      serverUrl = window.location.origin;
+      socketPath = '/api/socket.io';
+    } else {
+      // Production, accessed directly — connect straight to App Runner
+      serverUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+      socketPath = '/socket.io';
+    }
+
     socketClient.connect(serverUrl, socketPath);
     
     // Subscribe to events
